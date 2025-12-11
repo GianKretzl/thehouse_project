@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "title": "Reunião Pedagógica",
+    "date": "11T09:00:00.000Z",
+    "time": "9:00",
+    "duration": "30 min",
+    "type": "meeting",
+    "attendees": ["JD", "SM", "AR"],
+    "location": "Sala de Reuniões A",
+    "color": "bg-blue-500",
+    "description": "Reunião diária para discutir progresso e desafios"
+  },
+  {
+    "id": 2,
+    "title": "Revisão de Conteúdo",
+    "date": "11T14:00:00.000Z",
+    "time": "14:00",
+    "duration": "1 hora",
+    "type": "meeting",
+    "attendees": ["ER", "LC"],
+    "location": "Virtual",
+    "color": "bg-purple-500",
+    "description": "Revisar novos materiais didáticos e fornecer feedback"
+  },
+  {
+    "id": 3,
+    "title": "Lançamento do Projeto",
+    "date": "15T10:00:00.000Z",
+    "time": "10:00",
+    "duration": "2 horas",
+    "type": "event",
+    "attendees": ["TL", "ST"],
+    "location": "Auditório Principal",
+    "color": "bg-green-500",
+    "description": "Evento oficial de lançamento do projeto com stakeholders"
+  },
+  {
+    "id": 4,
+    "title": "Apresentação para Pais",
+    "date": "18T15:00:00.000Z",
+    "time": "15:00",
+    "duration": "1 hora",
+    "type": "meeting",
+    "attendees": ["AT", "SM"],
+    "location": "Sala dos Professores",
+    "color": "bg-orange-500",
+    "description": "Apresentar progresso dos alunos para os pais"
+  },
+  {
+    "id": 5,
+    "title": "Festa de Aniversário 🎉",
+    "date": "20T19:00:00.000Z",
+    "time": "19:00",
+    "duration": "3 horas",
+    "type": "personal",
+    "attendees": ["PB", "VB"],
+    "location": "Casa",
+    "color": "bg-pink-500",
+    "description": "Celebração de aniversário com amigos e família"
+  }
+]

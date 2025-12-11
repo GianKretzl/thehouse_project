@@ -5,8 +5,10 @@ from enum import Enum
 
 
 class UserRole(str, Enum):
-    ADMIN = "ADMIN"
-    PROFESSOR = "PROFESSOR"
+    DIRECTOR = "DIRECTOR"
+    PEDAGOGUE = "PEDAGOGUE"
+    SECRETARY = "SECRETARY"
+    TEACHER = "TEACHER"
 
 
 # User Schemas
@@ -47,24 +49,24 @@ class LoginRequest(BaseModel):
     password: str
 
 
-# Professor Schemas
-class ProfessorBase(BaseModel):
+# Teacher Schemas
+class TeacherBase(BaseModel):
     cpf: str = Field(..., min_length=11, max_length=11)
-    telefone: Optional[str] = None
-    especialidade: Optional[str] = None
-    data_admissao: Optional[date] = None
+    phone: Optional[str] = None
+    specialty: Optional[str] = None
+    hire_date: Optional[date] = None
 
 
-class ProfessorCreate(ProfessorBase):
+class TeacherCreate(TeacherBase):
     user: UserCreate
 
 
-class ProfessorUpdate(BaseModel):
-    telefone: Optional[str] = None
-    especialidade: Optional[str] = None
+class TeacherUpdate(BaseModel):
+    phone: Optional[str] = None
+    specialty: Optional[str] = None
 
 
-class ProfessorResponse(ProfessorBase):
+class TeacherResponse(TeacherBase):
     id: int
     user: UserResponse
     created_at: datetime
@@ -73,33 +75,33 @@ class ProfessorResponse(ProfessorBase):
         from_attributes = True
 
 
-# Aluno Schemas
-class AlunoBase(BaseModel):
-    nome: str
+# Student Schemas
+class StudentBase(BaseModel):
+    name: str
     email: Optional[EmailStr] = None
     cpf: str = Field(..., min_length=11, max_length=11)
-    data_nascimento: Optional[date] = None
-    telefone: Optional[str] = None
-    endereco: Optional[str] = None
-    responsavel_nome: Optional[str] = None
-    responsavel_telefone: Optional[str] = None
+    birth_date: Optional[date] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    guardian_name: Optional[str] = None
+    guardian_phone: Optional[str] = None
 
 
-class AlunoCreate(AlunoBase):
+class StudentCreate(StudentBase):
     pass
 
 
-class AlunoUpdate(BaseModel):
-    nome: Optional[str] = None
+class StudentUpdate(BaseModel):
+    name: Optional[str] = None
     email: Optional[EmailStr] = None
-    telefone: Optional[str] = None
-    endereco: Optional[str] = None
-    responsavel_nome: Optional[str] = None
-    responsavel_telefone: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    guardian_name: Optional[str] = None
+    guardian_phone: Optional[str] = None
     is_active: Optional[bool] = None
 
 
-class AlunoResponse(AlunoBase):
+class StudentResponse(StudentBase):
     id: int
     is_active: bool
     created_at: datetime
@@ -108,34 +110,34 @@ class AlunoResponse(AlunoBase):
         from_attributes = True
 
 
-# Turma Schemas
-class TurmaBase(BaseModel):
-    nome: str
-    descricao: Optional[str] = None
-    nivel: Optional[str] = None
-    capacidade_maxima: int = 15
-    data_inicio: Optional[date] = None
-    data_fim: Optional[date] = None
+# Class Schemas
+class ClassBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    level: Optional[str] = None
+    max_capacity: int = 15
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 
-class TurmaCreate(TurmaBase):
-    professor_id: int
+class ClassCreate(ClassBase):
+    teacher_id: int
 
 
-class TurmaUpdate(BaseModel):
-    nome: Optional[str] = None
-    descricao: Optional[str] = None
-    nivel: Optional[str] = None
-    professor_id: Optional[int] = None
-    capacidade_maxima: Optional[int] = None
-    data_inicio: Optional[date] = None
-    data_fim: Optional[date] = None
+class ClassUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    level: Optional[str] = None
+    teacher_id: Optional[int] = None
+    max_capacity: Optional[int] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
     is_active: Optional[bool] = None
 
 
-class TurmaResponse(TurmaBase):
+class ClassResponse(ClassBase):
     id: int
-    professor_id: int
+    teacher_id: int
     is_active: bool
     created_at: datetime
 
@@ -143,97 +145,97 @@ class TurmaResponse(TurmaBase):
         from_attributes = True
 
 
-# Horario Schemas
-class HorarioBase(BaseModel):
-    dia_semana: int = Field(..., ge=0, le=6)
-    hora_inicio: time
-    hora_fim: time
-    sala: Optional[str] = None
+# Schedule Schemas
+class ScheduleBase(BaseModel):
+    weekday: int = Field(..., ge=0, le=6)
+    start_time: time
+    end_time: time
+    room: Optional[str] = None
 
 
-class HorarioCreate(HorarioBase):
-    turma_id: int
+class ScheduleCreate(ScheduleBase):
+    class_id: int
 
 
-class HorarioResponse(HorarioBase):
+class ScheduleResponse(ScheduleBase):
     id: int
-    turma_id: int
+    class_id: int
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-# Aula Schemas
-class AulaBase(BaseModel):
-    data: date
-    conteudo: Optional[str] = None
-    observacoes: Optional[str] = None
+# Lesson Schemas
+class LessonBase(BaseModel):
+    date: date
+    content: Optional[str] = None
+    notes: Optional[str] = None
 
 
-class AulaCreate(AulaBase):
-    turma_id: int
+class LessonCreate(LessonBase):
+    class_id: int
 
 
-class AulaUpdate(BaseModel):
-    conteudo: Optional[str] = None
-    observacoes: Optional[str] = None
+class LessonUpdate(BaseModel):
+    content: Optional[str] = None
+    notes: Optional[str] = None
 
 
-class AulaResponse(AulaBase):
+class LessonResponse(LessonBase):
     id: int
-    turma_id: int
+    class_id: int
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-# Chamada Schemas
-class ChamadaBase(BaseModel):
-    aluno_id: int
-    presente: bool
-    observacao: Optional[str] = None
+# Attendance Schemas
+class AttendanceBase(BaseModel):
+    student_id: int
+    present: bool
+    note: Optional[str] = None
 
 
-class ChamadaCreate(ChamadaBase):
-    aula_id: int
+class AttendanceCreate(AttendanceBase):
+    lesson_id: int
 
 
-class ChamadaResponse(ChamadaBase):
+class AttendanceResponse(AttendanceBase):
     id: int
-    aula_id: int
+    lesson_id: int
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-# Avaliacao Schemas
-class AvaliacaoBase(BaseModel):
-    aluno_id: int
-    tipo: str
-    nota: float = Field(..., ge=0, le=10)
-    peso: float = Field(default=1.0, ge=0)
-    observacao: Optional[str] = None
-    data_avaliacao: date
+# Assessment Schemas
+class AssessmentBase(BaseModel):
+    student_id: int
+    type: str
+    grade: float = Field(..., ge=0, le=10)
+    weight: float = Field(default=1.0, ge=0)
+    note: Optional[str] = None
+    assessment_date: date
 
 
-class AvaliacaoCreate(AvaliacaoBase):
-    aula_id: int
+class AssessmentCreate(AssessmentBase):
+    lesson_id: int
 
 
-class AvaliacaoUpdate(BaseModel):
-    tipo: Optional[str] = None
-    nota: Optional[float] = Field(None, ge=0, le=10)
-    peso: Optional[float] = Field(None, ge=0)
-    observacao: Optional[str] = None
-    data_avaliacao: Optional[date] = None
+class AssessmentUpdate(BaseModel):
+    type: Optional[str] = None
+    grade: Optional[float] = Field(None, ge=0, le=10)
+    weight: Optional[float] = Field(None, ge=0)
+    note: Optional[str] = None
+    assessment_date: Optional[date] = None
 
 
-class AvaliacaoResponse(AvaliacaoBase):
+class AssessmentResponse(AssessmentBase):
     id: int
-    aula_id: int
+    lesson_id: int
     created_at: datetime
 
     class Config:
@@ -242,7 +244,7 @@ class AvaliacaoResponse(AvaliacaoBase):
 
 # Dashboard Stats
 class DashboardStats(BaseModel):
-    total_turmas: int
-    total_professores: int
-    total_alunos: int
-    total_aulas_hoje: int
+    total_classes: int
+    total_teachers: int
+    total_students: int
+    total_lessons_today: int

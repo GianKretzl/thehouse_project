@@ -1,24 +1,33 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/providers";
 
-const inter = Inter({ subsets: ["latin"] });
+import { ThemeProvider } from "@/components/theme-provider";
+import { SidebarConfigProvider } from "@/contexts/sidebar-context";
+import { AuthProvider } from "@/contexts/auth-context";
+import { Toaster } from "@/components/ui/toaster";
+import { inter } from "@/lib/fonts";
 
 export const metadata: Metadata = {
-  title: "The House Institute - Plataforma Educacional",
-  description: "Sistema de gerenciamento educacional para The House Institute",
+  title: "The House Platform",
+  description: "Sistema de Gestão Educacional - The House Institute",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="pt-BR">
-      <body className={inter.className}>
-        <Providers>{children}</Providers>
+    <html lang="pt-BR" className={`${inter.variable} antialiased`}>
+      <body className={inter.className} suppressHydrationWarning>
+        <ThemeProvider defaultTheme="system" storageKey="nextjs-ui-theme">
+          <AuthProvider>
+            <SidebarConfigProvider>
+              {children}
+              <Toaster />
+            </SidebarConfigProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

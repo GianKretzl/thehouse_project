@@ -1,0 +1,37 @@
+[
+  {
+    "id": "personal",
+    "name": "Pessoal",
+    "color": "bg-blue-500",
+    "visible": true,
+    "type": "personal"
+  },
+  {
+    "id": "work",
+    "name": "Trabalho",
+    "color": "bg-green-500",
+    "visible": true,
+    "type": "work"
+  },
+  {
+    "id": "shared",
+    "name": "Calendário da Equipe",
+    "color": "bg-purple-500",
+    "visible": true,
+    "type": "shared"
+  },
+  {
+    "id": "meetings",
+    "name": "Reuniões",
+    "color": "bg-orange-500",
+    "visible": true,
+    "type": "work"
+  },
+  {
+    "id": "events",
+    "name": "Eventos",
+    "color": "bg-pink-500",
+    "visible": true,
+    "type": "shared"
+  }
+]

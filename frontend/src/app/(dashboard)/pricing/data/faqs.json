@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "question": "Posso mudar meu plano a qualquer momento?",
+    "answer": "Sim! Você pode fazer upgrade ou downgrade a qualquer momento. As mudanças são aplicadas imediatamente e ajustaremos a cobrança proporcionalmente."
+  },
+  {
+    "id": 2,
+    "question": "O plano gratuito é realmente grátis?",
+    "answer": "Sim! O plano gratuito é para sempre grátis e inclui verificação ilimitada de links, lista de sites confiáveis e tutoriais básicos. Sem pegadinhas!"
+  },
+  {
+    "id": 3,
+    "question": "Quais formas de pagamento vocês aceitam?",
+    "answer": "Aceitamos cartão de crédito (Visa, Mastercard, Elo, American Express), Pix e boleto bancário. Todos os pagamentos são processados com segurança."
+  },
+  {
+    "id": 4,
+    "question": "Tem desconto para pagamento anual?",
+    "answer": "Sim! Economize 20% escolhendo o pagamento anual em qualquer plano. Você pode mudar para anual a qualquer momento nas configurações."
+  },
+  {
+    "id": 5,
+    "question": "Vocês oferecem desconto para idosos?",
+    "answer": "Sim! Oferecemos 30% de desconto nos planos Família e Premium para maiores de 60 anos. Entre em contato conosco para ativar seu desconto."
+  },
+  {
+    "id": 6,
+    "question": "Posso cancelar quando quiser?",
+    "answer": "Sim! Você pode cancelar a qualquer momento sem multas ou taxas. Continuará tendo acesso aos recursos até o fim do período pago."
+  },
+  {
+    "id": 7,
+    "question": "Tem garantia de devolução do dinheiro?",
+    "answer": "Sim! Oferecemos garantia de 7 dias. Se não estiver satisfeito, devolvemos 100% do seu dinheiro, sem perguntas."
+  },
+  {
+    "id": 8,
+    "question": "Posso adicionar mais pessoas no plano Família?",
+    "answer": "O plano Família inclui até 5 pessoas. Se precisar adicionar mais, entre em contato conosco para soluções personalizadas."
+  }
+]

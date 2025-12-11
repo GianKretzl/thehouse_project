@@ -1,16 +1,16 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Instalando dependências de build
+COPY package.json package-lock.json* ./
+RUN npm ci --legacy-peer-deps --silent
 
-# Install dependencies
-RUN npm install
-
-# Copy application
+# Copia o restante e faz o build
 COPY . .
+RUN npm run build
 
+ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "npm run start"]

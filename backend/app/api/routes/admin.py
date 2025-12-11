@@ -5,7 +5,7 @@ from typing import List
 from datetime import date
 from app.core.database import get_db
 from app.api.dependencies import require_role
-from app.models import User, UserRole, Turma, Professor, Aluno, Aula
+from app.models import User, UserRole, Class, Teacher, Student, Lesson
 from app.schemas import DashboardStats
 
 router = APIRouter()
@@ -14,19 +14,20 @@ router = APIRouter()
 @router.get("/stats", response_model=DashboardStats)
 async def get_dashboard_stats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.PEDAGOGUE)),
 ):
     """
     Obter estatísticas do dashboard administrativo
     """
-    total_turmas = db.query(func.count(Turma.id)).filter(Turma.is_active == True).scalar()
-    total_professores = db.query(func.count(Professor.id)).scalar()
-    total_alunos = db.query(func.count(Aluno.id)).filter(Aluno.is_active == True).scalar()
-    total_aulas_hoje = db.query(func.count(Aula.id)).filter(Aula.data == date.today()).scalar()
+    total_classes = db.query(func.count(Class.id)).filter(Class.is_active == True).scalar()
+    total_teachers = db.query(func.count(Teacher.id)).scalar()
+    total_students = db.query(func.count(Student.id)).filter(Student.is_active == True).scalar()
+    total_lessons_today = db.query(func.count(Lesson.id)).filter(Lesson.date == date.today()).scalar()
 
     return {
-        "total_turmas": total_turmas or 0,
-        "total_professores": total_professores or 0,
-        "total_alunos": total_alunos or 0,
-        "total_aulas_hoje": total_aulas_hoje or 0,
+        "total_classes": total_classes or 0,
+        "total_teachers": total_teachers or 0,
+        "total_students": total_students or 0,
+        "total_lessons_today": total_lessons_today or 0,
     }
+

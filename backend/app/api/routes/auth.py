@@ -6,6 +6,7 @@ from app.core.security import verify_password, create_access_token, get_password
 from app.core.config import settings
 from app.schemas import LoginRequest, Token, UserResponse
 from app.models import User
+from app.api.dependencies import get_current_user
 
 router = APIRouter()
 
@@ -39,6 +40,16 @@ async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "user": UserResponse.from_orm(user),
     }
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Obter informações do usuário autenticado
+    """
+    return UserResponse.from_orm(current_user)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)

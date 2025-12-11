@@ -1,19 +1,22 @@
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+"use client";
 
-export default async function Home() {
-  const session = await getServerSession(authOptions);
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-  if (!session) {
-    redirect("/login");
-  }
+export default function HomePage() {
+  const router = useRouter();
 
-  if (session.user.role === "ADMIN") {
-    redirect("/admin/dashboard");
-  } else {
-    redirect("/professor/dashboard");
-  }
+  useEffect(() => {
+    router.replace("/sign-in");
+  }, [router]);
 
-  return null;
+  // Show a loading state while redirecting
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <p className="text-muted-foreground mt-2">Carregando...</p>
+      </div>
+    </div>
+  );
 }

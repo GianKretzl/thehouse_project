@@ -44,26 +44,23 @@ async def get_current_user(
     return user
 
 
-def require_role(required_role: UserRole):
-    async def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role != required_role:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Permissão insuficiente",
-            )
-        return current_user
-
-    return role_checker
-
-
-# Dependency para permitir múltiplos roles
-def require_roles(*allowed_roles: UserRole):
+def require_role(*allowed_roles: UserRole):
+    """
+    Dependency para verificar se o usuário tem uma das roles permitidas.
+    Aceita uma ou múltiplas roles como argumentos.
+    Uso: Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY))
+    """
     async def role_checker(current_user: User = Depends(get_current_user)) -> User:
         if current_user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Permissão insuficiente",
+                detail="Você não tem permissão para acessar este recurso",
             )
         return current_user
 
     return role_checker
+
+
+def require_roles(*allowed_roles: UserRole):
+    """Alias para require_role (compatibilidade)"""
+    return require_role(*allowed_roles)
