@@ -128,14 +128,14 @@ const chartData = [
 
 const chartConfig = {
   visitors: {
-    label: "Verificações",
+    label: "Registros",
   },
   desktop: {
-    label: "Computador",
+    label: "Matrículas",
     color: "var(--primary)",
   },
   mobile: {
-    label: "Celular",
+    label: "Frequência",
     color: "var(--primary)",
   },
 } satisfies ChartConfig

@@ -66,14 +66,16 @@ async def create_class(
 ):
     """
     Criar nova turma (apenas Admin)
+    Professor é opcional - pode ser atribuído depois
     """
-    # Check if teacher exists
-    teacher = db.query(Teacher).filter(Teacher.id == class_data.teacher_id).first()
-    if not teacher:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Professor não encontrado",
-        )
+    # Check if teacher exists (if provided)
+    if class_data.teacher_id:
+        teacher = db.query(Teacher).filter(Teacher.id == class_data.teacher_id).first()
+        if not teacher:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Professor não encontrado",
+            )
 
     new_class = Class(**class_data.dict())
     db.add(new_class)

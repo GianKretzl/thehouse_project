@@ -1,4 +1,4 @@
-import { Shield, CheckCircle, AlertTriangle, Clock } from "lucide-react"
+import { UserPlus, BookOpen, Users, FileText, Calendar } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -11,48 +11,48 @@ import { Badge } from "@/components/ui/badge"
 const recentActivities = [
   {
     id: 1,
-    type: "safe",
-    site: "magazineluiza.com.br",
-    action: "Link verificado",
+    type: "student",
+    title: "Novo aluno cadastrado",
+    description: "Ana Carolina Silva - 5º Ano A",
     time: "Há 2 horas",
-    icon: CheckCircle,
+    icon: UserPlus,
     variant: "default" as const,
   },
   {
     id: 2,
-    type: "safe",
-    site: "mercadolivre.com.br",
-    action: "Site adicionado aos confiáveis",
+    type: "class",
+    title: "Turma criada",
+    description: "6º Ano B - Matemática Avançada",
     time: "Há 5 horas",
-    icon: Shield,
+    icon: Users,
     variant: "default" as const,
   },
   {
     id: 3,
-    type: "warning",
-    site: "oferta-imperdivel-xyz.com",
-    action: "Ameaça bloqueada",
+    type: "lesson",
+    title: "Aula registrada",
+    description: "Português - Literatura Brasileira",
     time: "Ontem",
-    icon: AlertTriangle,
-    variant: "destructive" as const,
+    icon: BookOpen,
+    variant: "secondary" as const,
   },
   {
     id: 4,
-    type: "safe",
-    site: "americanas.com.br",
-    action: "Link verificado",
+    type: "assessment",
+    title: "Avaliação lançada",
+    description: "Prova de História - 7º Ano",
     time: "Ontem",
-    icon: CheckCircle,
-    variant: "default" as const,
+    icon: FileText,
+    variant: "secondary" as const,
   },
   {
     id: 5,
-    type: "safe",
-    site: "submarino.com.br",
-    action: "Link verificado",
+    type: "event",
+    title: "Evento agendado",
+    description: "Reunião de Pais - 15/12",
     time: "Há 2 dias",
-    icon: CheckCircle,
-    variant: "default" as const,
+    icon: Calendar,
+    variant: "outline" as const,
   },
 ]
 
@@ -62,7 +62,7 @@ export function RecentActivity() {
       <CardHeader>
         <CardTitle>Atividades Recentes</CardTitle>
         <CardDescription>
-          Suas últimas verificações e ações de segurança
+          Últimas atualizações e registros do sistema
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -74,33 +74,21 @@ export function RecentActivity() {
                 key={activity.id}
                 className="flex items-start gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
               >
-                <div className={`rounded-full p-2 ${
-                  activity.type === "safe" 
-                    ? "bg-green-100 dark:bg-green-900/20" 
-                    : "bg-red-100 dark:bg-red-900/20"
-                }`}>
-                  <Icon className={`h-5 w-5 ${
-                    activity.type === "safe" 
-                      ? "text-green-600 dark:text-green-400" 
-                      : "text-red-600 dark:text-red-400"
-                  }`} />
+                <div className="rounded-full p-2 bg-primary/10">
+                  <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium leading-none">
-                      {activity.site}
+                      {activity.title}
                     </p>
-                    <Badge variant={activity.variant} className="ml-auto">
-                      {activity.type === "safe" ? "Seguro" : "Bloqueado"}
+                    <Badge variant={activity.variant} className="ml-auto text-xs">
+                      {activity.time}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {activity.action}
+                    {activity.description}
                   </p>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {activity.time}
-                  </div>
                 </div>
               </div>
             )

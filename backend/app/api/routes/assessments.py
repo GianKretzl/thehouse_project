@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.core.database import get_db
 from app.api.dependencies import require_role
-from app.models import User, UserRole, Assessment, Lesson, Teacher
+from app.models import User, UserRole, Assessment, Lesson, Teacher, Class
 from app.schemas import AssessmentCreate, AssessmentResponse, AssessmentUpdate
 
 router = APIRouter()
@@ -11,6 +11,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[AssessmentResponse])
 async def list_assessments(
+    class_id: int = None,
     lesson_id: int = None,
     student_id: int = None,
     skip: int = 0,
@@ -23,11 +24,23 @@ async def list_assessments(
     """
     query = db.query(Assessment)
     
+    # Filtrar por turma (class_id)
+    if class_id:
+        query = query.join(Lesson).filter(Lesson.class_id == class_id)
+    
+    # Filtrar por aula específica
     if lesson_id:
         query = query.filter(Assessment.lesson_id == lesson_id)
     
+    # Filtrar por aluno
     if student_id:
         query = query.filter(Assessment.student_id == student_id)
+    
+    # Teacher pode ver apenas suas turmas
+    if current_user.role == UserRole.TEACHER:
+        teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
+        if teacher:
+            query = query.join(Lesson).join(Class).filter(Class.teacher_id == teacher.id)
     
     assessments = query.offset(skip).limit(limit).all()
     return assessments
@@ -37,7 +50,7 @@ async def list_assessments(
 async def create_assessment(
     assessment_data: AssessmentCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.TEACHER)),
+    current_user: User = Depends(require_role(UserRole.TEACHER, UserRole.DIRECTOR, UserRole.SECRETARY)),
 ):
     """
     Criar nova avaliação (lançar nota)
@@ -49,13 +62,14 @@ async def create_assessment(
             detail="Aula não encontrada",
         )
     
-    # Check teacher permission
-    teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
-    if not teacher or lesson.class_.teacher_id != teacher.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Você não tem permissão para lançar notas nesta aula",
-        )
+    # Check teacher permission (apenas para professores)
+    if current_user.role == UserRole.TEACHER:
+        teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
+        if not teacher or lesson.class_.teacher_id != teacher.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Você não tem permissão para lançar notas nesta aula",
+            )
     
     new_assessment = Assessment(**assessment_data.dict())
     db.add(new_assessment)
@@ -70,7 +84,7 @@ async def update_assessment(
     assessment_id: int,
     assessment_data: AssessmentUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.TEACHER)),
+    current_user: User = Depends(require_role(UserRole.TEACHER, UserRole.DIRECTOR, UserRole.SECRETARY)),
 ):
     """
     Atualizar uma avaliação
@@ -82,13 +96,14 @@ async def update_assessment(
             detail="Avaliação não encontrada",
         )
     
-    # Check teacher permission
-    teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
-    if not teacher or assessment.lesson.class_.teacher_id != teacher.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Você não tem permissão para editar esta avaliação",
-        )
+    # Check teacher permission (apenas para professores)
+    if current_user.role == UserRole.TEACHER:
+        teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
+        if not teacher or assessment.lesson.class_.teacher_id != teacher.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Você não tem permissão para editar esta avaliação",
+            )
     
     update_data = assessment_data.dict(exclude_unset=True)
     for field, value in update_data.items():
@@ -103,24 +118,16 @@ async def update_assessment(
 async def delete_assessment(
     assessment_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.TEACHER)),
+    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY)),
 ):
     """
-    Deletar uma avaliação
+    Deletar uma avaliação (apenas DIRECTOR e SECRETARY)
     """
     assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
     if not assessment:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Avaliação não encontrada",
-        )
-    
-    # Check teacher permission
-    teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
-    if not teacher or assessment.lesson.class_.teacher_id != teacher.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Você não tem permissão para deletar esta avaliação",
         )
     
     db.delete(assessment)

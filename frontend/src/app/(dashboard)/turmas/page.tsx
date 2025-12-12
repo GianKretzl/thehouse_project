@@ -21,12 +21,20 @@ import {
 } from "@/components/ui/card"
 import { Plus, Search, Pencil, Trash2, Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { ClassDialog } from "@/components/dialogs/class-dialog"
+import { DeleteConfirmDialog } from "@/components/dialogs/delete-confirm-dialog"
+import { useToast } from "@/hooks/use-toast"
 
 export default function ClassesPage() {
+  const { toast } = useToast()
   const [classes, setClasses] = useState<Class[]>([])
   const [teachers, setTeachers] = useState<Teacher[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedClass, setSelectedClass] = useState<Class | undefined>()
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -48,7 +56,8 @@ export default function ClassesPage() {
     }
   }
 
-  const getTeacherName = (teacherId: number) => {
+  const getTeacherName = (teacherId: number | undefined | null) => {
+    if (!teacherId) return "Sem professor"
     const teacher = teachers.find(t => t.id === teacherId)
     return teacher ? teacher.user.name : "N/A"
   }
@@ -63,20 +72,58 @@ export default function ClassesPage() {
     return new Date(dateString).toLocaleDateString("pt-BR")
   }
 
+  const handleEdit = (classItem: Class) => {
+    setSelectedClass(classItem)
+    setDialogOpen(true)
+  }
+
+  const handleAdd = () => {
+    setSelectedClass(undefined)
+    setDialogOpen(true)
+  }
+
+  const handleDeleteClick = (classItem: Class) => {
+    setSelectedClass(classItem)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedClass) return
+    setDeleteLoading(true)
+    try {
+      await classesApi.delete(selectedClass.id)
+      toast({
+        title: "Turma removida!",
+        description: "A turma foi removida com sucesso.",
+      })
+      loadData()
+      setDeleteDialogOpen(false)
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.detail || "Erro ao remover turma",
+        variant: "destructive",
+      })
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Turmas</h1>
-          <p className="text-muted-foreground">
-            Gerencie as turmas da instituição
-          </p>
+    <>
+      <div className="flex flex-col gap-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Turmas</h1>
+            <p className="text-muted-foreground">
+              Gerencie as turmas da instituição
+            </p>
+          </div>
+          <Button onClick={handleAdd}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Turma
+          </Button>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Turma
-        </Button>
-      </div>
 
       <Card>
         <CardHeader>
@@ -140,7 +187,7 @@ export default function ClassesPage() {
                           "-"
                         )}
                       </TableCell>
-                      <TableCell>{getTeacherName(classItem.teacher_id)}</TableCell>
+                      <TableCell>{getTeacherName(classItem.teacher_id ?? undefined)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
@@ -160,10 +207,18 @@ export default function ClassesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(classItem)}
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteClick(classItem)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -176,6 +231,23 @@ export default function ClassesPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+
+      <ClassDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        classItem={selectedClass}
+        onSuccess={loadData}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        loading={deleteLoading}
+        title="Excluir Turma"
+        description={`Tem certeza que deseja excluir a turma "${selectedClass?.name}"? Esta ação não pode ser desfeita.`}
+      />
+    </>
   )
 }

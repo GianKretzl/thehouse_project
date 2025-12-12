@@ -94,11 +94,26 @@ function getNavGroups(userRole?: string) {
   }
 
   if (hasTeacherAccess) {
-    academicItems.push({
-      title: "Aulas",
-      url: "/aulas",
-      icon: BookOpen,
-    })
+    // Se for apenas professor, mostra Chamada e Conteúdo ao invés de Aulas
+    if (isTeacher && !hasFullAccess && !hasPedagogicalAccess && !hasAdminAccess) {
+      academicItems.push({
+        title: "Chamada",
+        url: "/chamada",
+        icon: ClipboardList,
+      })
+      academicItems.push({
+        title: "Conteúdo",
+        url: "/conteudo",
+        icon: BookOpen,
+      })
+    } else {
+      // Outros roles veem Aulas
+      academicItems.push({
+        title: "Aulas",
+        url: "/aulas",
+        icon: BookOpen,
+      })
+    }
   }
 
   if (academicItems.length > 0) {
@@ -188,11 +203,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <School size={20} className="text-current" />
+                <div className="flex items-center justify-center">
+                  <Logo size={32} />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">The House</span>
+                  <div className="flex items-center gap-1">
+                    <span className="font-bold text-[#1e3a8a]">The</span>
+                    <span className="font-bold text-[#b91c1c]">House</span>
+                  </div>
                   <span className="truncate text-xs">Gestão Educacional</span>
                 </div>
               </Link>

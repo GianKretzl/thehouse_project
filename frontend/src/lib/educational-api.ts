@@ -33,7 +33,6 @@ export interface TeacherCreate {
     email: string;
     name: string;
     password: string;
-    role: "TEACHER";
   };
 }
 
@@ -82,7 +81,7 @@ export interface Class {
   name: string;
   description: string | null;
   level: string | null;
-  teacher_id: number;
+  teacher_id: number | null;
   max_capacity: number;
   start_date: string | null;
   end_date: string | null;
@@ -94,7 +93,7 @@ export interface ClassCreate {
   name: string;
   description?: string;
   level?: string;
-  teacher_id: number;
+  teacher_id?: number;
   max_capacity?: number;
   start_date?: string;
   end_date?: string;
@@ -129,24 +128,25 @@ export interface LessonCreate {
 
 export interface Assessment {
   id: number;
+  lesson_id: number;
   student_id: number;
-  class_id: number;
-  assessment_type: string;
+  type: string;
   grade: number;
-  max_grade: number;
-  date: string;
-  description: string | null;
+  weight: number;
+  note: string | null;
+  assessment_date: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface AssessmentCreate {
+  lesson_id: number;
   student_id: number;
-  class_id: number;
-  assessment_type: string;
+  type: string;
   grade: number;
-  max_grade: number;
-  date: string;
-  description?: string;
+  weight?: number;
+  note?: string;
+  assessment_date: string;
 }
 
 // ============== API DE PROFESSORES ==============
@@ -293,6 +293,58 @@ export const lessonsApi = {
   async delete(id: number): Promise<void> {
     return fetchApi<void>(`/lessons/${id}`, {
       method: 'DELETE',
+    });
+  },
+};
+
+// ============== API DE MATRÍCULAS ==============
+
+export interface Enrollment {
+  id: number;
+  student_id: number;
+  class_id: number;
+  enrollment_date: string | null;
+  is_active: boolean;
+  created_at: string;
+  student: Student;
+}
+
+export const enrollmentsApi = {
+  async getClassStudents(classId: number): Promise<Enrollment[]> {
+    return fetchApi<Enrollment[]>(`/enrollments/class/${classId}/students`);
+  },
+};
+
+// ============== API DE FREQUÊNCIA ==============
+
+export interface Attendance {
+  id: number;
+  lesson_id: number;
+  student_id: number;
+  present: boolean;
+  note: string | null;
+  created_at: string;
+}
+
+export interface AttendanceCreate {
+  lesson_id: number;
+  student_id: number;
+  present: boolean;
+  note?: string;
+}
+
+export const attendancesApi = {
+  async create(data: AttendanceCreate): Promise<Attendance> {
+    return fetchApi<Attendance>('/lessons/attendance/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async bulkCreate(data: AttendanceCreate[]): Promise<void> {
+    return fetchApi<void>('/lessons/attendance/bulk', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   },
 };

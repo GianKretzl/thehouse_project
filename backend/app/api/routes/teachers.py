@@ -128,7 +128,8 @@ async def delete_teacher(
     current_user: User = Depends(require_role(UserRole.DIRECTOR)),
 ):
     """
-    Desativar um professor
+    Excluir permanentemente um professor (apenas Diretor)
+    Remove o professor e suas turmas ficam sem professor atribuído
     """
     teacher = db.query(Teacher).filter(Teacher.id == teacher_id).first()
     if not teacher:
@@ -137,8 +138,17 @@ async def delete_teacher(
             detail="Professor não encontrado",
         )
 
-    # Deactivate user
-    teacher.user.is_active = False
+    # Remover professor das turmas (teacher_id = NULL)
+    from app.models import Class
+    db.query(Class).filter(Class.teacher_id == teacher_id).update(
+        {"teacher_id": None},
+        synchronize_session=False
+    )
+
+    # Delete teacher and associated user
+    user = teacher.user
+    db.delete(teacher)
+    db.delete(user)
     db.commit()
 
     return None

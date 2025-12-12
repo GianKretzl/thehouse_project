@@ -21,11 +21,19 @@ import {
 } from "@/components/ui/card"
 import { Plus, Search, Pencil, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { StudentDialog } from "@/components/dialogs/student-dialog"
+import { DeleteConfirmDialog } from "@/components/dialogs/delete-confirm-dialog"
+import { useToast } from "@/hooks/use-toast"
 
 export default function StudentsPage() {
+  const { toast } = useToast()
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedStudent, setSelectedStudent] = useState<Student | undefined>()
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     loadStudents()
@@ -54,107 +62,170 @@ export default function StudentsPage() {
     return new Date(dateString).toLocaleDateString("pt-BR")
   }
 
+  const handleEdit = (student: Student) => {
+    setSelectedStudent(student)
+    setDialogOpen(true)
+  }
+
+  const handleAdd = () => {
+    setSelectedStudent(undefined)
+    setDialogOpen(true)
+  }
+
+  const handleDeleteClick = (student: Student) => {
+    setSelectedStudent(student)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedStudent) return
+    setDeleteLoading(true)
+    try {
+      await studentsApi.delete(selectedStudent.id)
+      toast({
+        title: "Aluno removido!",
+        description: "O aluno foi removido com sucesso.",
+      })
+      loadStudents()
+      setDeleteDialogOpen(false)
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.response?.data?.detail || "Erro ao remover aluno",
+        variant: "destructive",
+      })
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Alunos</h1>
-          <p className="text-muted-foreground">
-            Gerencie os alunos da instituição
-          </p>
-        </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Aluno
-        </Button>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Lista de Alunos</CardTitle>
-          <CardDescription>
-            Total de {students.length} alunos cadastrados
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome, CPF ou email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
-            </div>
+    <>
+      <div className="flex flex-col gap-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Alunos</h1>
+            <p className="text-muted-foreground">
+              Gerencie os alunos da instituição
+            </p>
           </div>
+          <Button onClick={handleAdd}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Aluno
+          </Button>
+        </div>
 
-          {loading ? (
-            <div className="text-center py-8">Carregando alunos...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>CPF</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Data de Nascimento</TableHead>
-                  <TableHead>Responsável</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudents.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Lista de Alunos</CardTitle>
+            <CardDescription>
+              Total de {students.length} alunos cadastrados
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome, CPF ou email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="text-center py-8">Carregando alunos...</div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      {searchTerm
-                        ? "Nenhum aluno encontrado"
-                        : "Nenhum aluno cadastrado"}
-                    </TableCell>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>CPF</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Data de Nascimento</TableHead>
+                    <TableHead>Responsável</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ) : (
-                  filteredStudents.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell className="font-medium">
-                        {student.name}
-                      </TableCell>
-                      <TableCell>{student.cpf}</TableCell>
-                      <TableCell>{student.email || "-"}</TableCell>
-                      <TableCell>{formatDate(student.birth_date)}</TableCell>
-                      <TableCell>
-                        {student.guardian_name || "-"}
-                        {student.guardian_phone && (
-                          <div className="text-xs text-muted-foreground">
-                            {student.guardian_phone}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {student.is_active ? (
-                          <Badge variant="default">Ativo</Badge>
-                        ) : (
-                          <Badge variant="secondary">Inativo</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredStudents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        {searchTerm
+                          ? "Nenhum aluno encontrado"
+                          : "Nenhum aluno cadastrado"}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                  ) : (
+                    filteredStudents.map((student) => (
+                      <TableRow key={student.id}>
+                        <TableCell className="font-medium">
+                          {student.name}
+                        </TableCell>
+                        <TableCell>{student.cpf}</TableCell>
+                        <TableCell>{student.email || "-"}</TableCell>
+                        <TableCell>{formatDate(student.birth_date)}</TableCell>
+                        <TableCell>
+                          {student.guardian_name || "-"}
+                          {student.guardian_phone && (
+                            <div className="text-xs text-muted-foreground">
+                              {student.guardian_phone}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {student.is_active ? (
+                            <Badge variant="default">Ativo</Badge>
+                          ) : (
+                            <Badge variant="secondary">Inativo</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(student)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteClick(student)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <StudentDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        student={selectedStudent}
+        onSuccess={loadStudents}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        loading={deleteLoading}
+        title="Excluir Aluno"
+        description={`Tem certeza que deseja excluir o aluno "${selectedStudent?.name}"? Esta ação não pode ser desfeita.`}
+      />
+    </>
   )
 }

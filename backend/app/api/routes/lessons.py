@@ -142,16 +142,47 @@ async def delete_lesson(
 
 
 # Attendance endpoints
-@router.post("/{lesson_id}/attendances", response_model=AttendanceResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/attendance/", response_model=AttendanceResponse, status_code=status.HTTP_201_CREATED)
 async def create_attendance(
-    lesson_id: int,
     attendance_data: AttendanceCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.TEACHER)),
+    current_user: User = Depends(require_role(UserRole.TEACHER, UserRole.DIRECTOR, UserRole.SECRETARY)),
 ):
     """
     Registrar chamada (presença) de um aluno
     """
+    lesson = db.query(Lesson).filter(Lesson.id == attendance_data.lesson_id).first()
+    if not lesson:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Aula não encontrada",
+        )
+    
+    new_attendance = Attendance(**attendance_data.dict())
+    db.add(new_attendance)
+    db.commit()
+    db.refresh(new_attendance)
+    
+    return new_attendance
+
+
+@router.post("/attendance/bulk", status_code=status.HTTP_201_CREATED)
+async def create_bulk_attendances(
+    attendances: List[AttendanceCreate],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.TEACHER, UserRole.DIRECTOR, UserRole.SECRETARY)),
+):
+    """
+    Registrar múltiplas presenças de uma vez
+    """
+    if not attendances:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Lista de presenças vazia",
+        )
+    
+    # Verificar se a aula existe
+    lesson_id = attendances[0].lesson_id
     lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
     if not lesson:
         raise HTTPException(
@@ -159,23 +190,13 @@ async def create_attendance(
             detail="Aula não encontrada",
         )
     
-    # Check teacher permission
-    teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
-    if not teacher or lesson.class_.teacher_id != teacher.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Você não tem permissão para fazer chamada nesta aula",
-        )
+    # Criar todas as presenças
+    for attendance_data in attendances:
+        new_attendance = Attendance(**attendance_data.dict())
+        db.add(new_attendance)
     
-    # Create attendance with lesson_id from URL
-    attendance_dict = attendance_data.dict()
-    attendance_dict['lesson_id'] = lesson_id
-    new_attendance = Attendance(**attendance_dict)
-    db.add(new_attendance)
     db.commit()
-    db.refresh(new_attendance)
-    
-    return new_attendance
+    return {"message": f"{len(attendances)} presenças registradas com sucesso"}
 
 
 @router.get("/{lesson_id}/attendances", response_model=List[AttendanceResponse])

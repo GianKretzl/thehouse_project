@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.routes import auth, admin, teachers, students, classes, lessons, assessments
+from app.api.routes import auth, admin, teachers, students, classes, lessons, assessments, enrollments
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -26,6 +26,7 @@ app.include_router(students.router, prefix=f"{settings.API_V1_PREFIX}/students",
 app.include_router(classes.router, prefix=f"{settings.API_V1_PREFIX}/classes", tags=["classes"])
 app.include_router(lessons.router, prefix=f"{settings.API_V1_PREFIX}/lessons", tags=["lessons"])
 app.include_router(assessments.router, prefix=f"{settings.API_V1_PREFIX}/assessments", tags=["assessments"])
+app.include_router(enrollments.router, prefix=f"{settings.API_V1_PREFIX}/enrollments", tags=["enrollments"])
 
 
 @app.get("/")

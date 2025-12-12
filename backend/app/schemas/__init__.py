@@ -57,8 +57,15 @@ class TeacherBase(BaseModel):
     hire_date: Optional[date] = None
 
 
+class TeacherUserCreate(BaseModel):
+    """Schema para criação de usuário professor (sem role)"""
+    email: EmailStr
+    name: str
+    password: str
+
+
 class TeacherCreate(TeacherBase):
-    user: UserCreate
+    user: TeacherUserCreate
 
 
 class TeacherUpdate(BaseModel):
@@ -121,7 +128,7 @@ class ClassBase(BaseModel):
 
 
 class ClassCreate(ClassBase):
-    teacher_id: int
+    teacher_id: Optional[int] = None
 
 
 class ClassUpdate(BaseModel):
@@ -137,7 +144,7 @@ class ClassUpdate(BaseModel):
 
 class ClassResponse(ClassBase):
     id: int
-    teacher_id: int
+    teacher_id: Optional[int] = None
     is_active: bool
     created_at: datetime
 
@@ -206,6 +213,27 @@ class AttendanceResponse(AttendanceBase):
     id: int
     lesson_id: int
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Enrollment Schemas
+class EnrollmentBase(BaseModel):
+    student_id: int
+    class_id: int
+    enrollment_date: Optional[date] = None
+
+
+class EnrollmentCreate(EnrollmentBase):
+    pass
+
+
+class EnrollmentResponse(EnrollmentBase):
+    id: int
+    is_active: bool
+    created_at: datetime
+    student: StudentResponse
 
     class Config:
         from_attributes = True
