@@ -1,4 +1,7 @@
+"use client"
+
 import { UserPlus, BookOpen, Users, FileText, Calendar } from "lucide-react"
+import { useEffect, useState } from "react"
 import {
   Card,
   CardContent,
@@ -8,55 +11,88 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
-const recentActivities = [
-  {
-    id: 1,
-    type: "student",
-    title: "Novo aluno cadastrado",
-    description: "Ana Carolina Silva - 5º Ano A",
-    time: "Há 2 horas",
-    icon: UserPlus,
-    variant: "default" as const,
-  },
-  {
-    id: 2,
-    type: "class",
-    title: "Turma criada",
-    description: "6º Ano B - Matemática Avançada",
-    time: "Há 5 horas",
-    icon: Users,
-    variant: "default" as const,
-  },
-  {
-    id: 3,
-    type: "lesson",
-    title: "Aula registrada",
-    description: "Português - Literatura Brasileira",
-    time: "Ontem",
-    icon: BookOpen,
-    variant: "secondary" as const,
-  },
-  {
-    id: 4,
-    type: "assessment",
-    title: "Avaliação lançada",
-    description: "Prova de História - 7º Ano",
-    time: "Ontem",
-    icon: FileText,
-    variant: "secondary" as const,
-  },
-  {
-    id: 5,
-    type: "event",
-    title: "Evento agendado",
-    description: "Reunião de Pais - 15/12",
-    time: "Há 2 dias",
-    icon: Calendar,
-    variant: "outline" as const,
-  },
-]
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+const iconMap = {
+  UserPlus: UserPlus,
+  BookOpen: BookOpen,
+  Users: Users,
+  FileText: FileText,
+  Calendar: Calendar,
+}
+
+interface Activity {
+  id: string
+  type: string
+  title: string
+  description: string
+  time: string
+  icon: keyof typeof iconMap
+}
 
 export function RecentActivity() {
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    
+    async function fetchActivities() {
+      try {
+        const token = localStorage.getItem('access_token')
+        if (!token) {
+          setLoading(false)
+          return
+        }
+        
+        const response = await fetch(`${API_URL}/api/v1/activities/recent`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (response.ok && isMounted) {
+          const data = await response.json()
+          setActivities(data)
+        }
+      } catch (error) {
+        console.error('Erro ao buscar atividades:', error)
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    // Delay para não bloquear renderização inicial
+    const timeoutId = setTimeout(fetchActivities, 100)
+    
+    return () => {
+      isMounted = false
+      clearTimeout(timeoutId)
+    }
+  }, [])
+
+  const getVariant = (time: string) => {
+    if (time.includes('hora') || time.includes('minuto')) return 'default'
+    if (time === 'Ontem') return 'secondary'
+    return 'outline'
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Atividades Recentes</CardTitle>
+          <CardDescription>
+            Carregando...
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -67,8 +103,8 @@ export function RecentActivity() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {recentActivities.map((activity) => {
-            const Icon = activity.icon
+          {activities.map((activity) => {
+            const Icon = iconMap[activity.icon] || UserPlus
             return (
               <div
                 key={activity.id}
@@ -82,7 +118,7 @@ export function RecentActivity() {
                     <p className="text-sm font-medium leading-none">
                       {activity.title}
                     </p>
-                    <Badge variant={activity.variant} className="ml-auto text-xs">
+                    <Badge variant={getVariant(activity.time)} className="ml-auto text-xs">
                       {activity.time}
                     </Badge>
                   </div>

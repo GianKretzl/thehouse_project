@@ -28,7 +28,7 @@ export function SidebarNotification() {
           <h3 className="flex items-center gap-3 font-semibold text-neutral-900 dark:text-neutral-100 mb-2 mt-1">
             <Logo size={42} className="-mt-1" />
             <div>
-              Bem-vindo ao NetSaber
+              Bem-vindo ao The House
             </div>
           </h3>
           <p className="text-sm text-muted-foreground dark:text-neutral-400 leading-relaxed">

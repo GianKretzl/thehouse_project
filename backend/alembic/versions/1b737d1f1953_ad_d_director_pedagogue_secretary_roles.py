@@ -22,12 +22,16 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     # Adicionar novos valores ao enum userrole
     # PostgreSQL requer comandos separados para cada valor
-    op.execute("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'DIRECTOR'")
-    op.execute("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'PEDAGOGUE'")
-    op.execute("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'SECRETARY'")
+    # Usamos commit para que os novos valores possam ser usados
+    connection = op.get_bind()
+    connection.execute(sa.text("COMMIT"))
+    connection.execute(sa.text("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'DIRECTOR'"))
+    connection.execute(sa.text("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'PEDAGOGUE'"))
+    connection.execute(sa.text("ALTER TYPE userrole ADD VALUE IF NOT EXISTS 'SECRETARY'"))
     
     # Opcional: Atualizar usuários existentes com role ADMIN para DIRECTOR
-    op.execute("UPDATE users SET role = 'DIRECTOR' WHERE role = 'ADMIN'")
+    # Removido pois ADMIN ainda é um valor válido
+    # op.execute("UPDATE users SET role = 'DIRECTOR' WHERE role = 'ADMIN'")
 
 
 def downgrade() -> None:

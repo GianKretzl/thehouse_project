@@ -117,6 +117,27 @@ class StudentResponse(StudentBase):
         from_attributes = True
 
 
+# Schedule Schemas
+class ScheduleBase(BaseModel):
+    weekday: int = Field(..., ge=0, le=6)
+    start_time: time
+    end_time: time
+    room: Optional[str] = None
+
+
+class ScheduleCreate(ScheduleBase):
+    class_id: int
+
+
+class ScheduleResponse(ScheduleBase):
+    id: int
+    class_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 # Class Schemas
 class ClassBase(BaseModel):
     name: str
@@ -145,28 +166,9 @@ class ClassUpdate(BaseModel):
 class ClassResponse(ClassBase):
     id: int
     teacher_id: Optional[int] = None
+    teacher_name: Optional[str] = None  # Nome do professor
+    schedules: List[ScheduleResponse] = []  # Horários da turma
     is_active: bool
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-# Schedule Schemas
-class ScheduleBase(BaseModel):
-    weekday: int = Field(..., ge=0, le=6)
-    start_time: time
-    end_time: time
-    room: Optional[str] = None
-
-
-class ScheduleCreate(ScheduleBase):
-    class_id: int
-
-
-class ScheduleResponse(ScheduleBase):
-    id: int
-    class_id: int
     created_at: datetime
 
     class Config:

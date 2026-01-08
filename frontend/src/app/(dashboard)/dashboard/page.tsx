@@ -1,9 +1,13 @@
 "use client"
 
 import { useAuth } from "@/contexts/auth-context"
-import { ChartAreaInteractive } from "./components/chart-area-interactive"
-import { SectionCards } from "./components/section-cards"
-import { RecentActivity } from "./components/recent-activity"
+import { Suspense, lazy } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
+
+// Lazy load componentes pesados
+const ChartAreaInteractive = lazy(() => import("./components/chart-area-interactive").then(m => ({ default: m.ChartAreaInteractive })))
+const SectionCards = lazy(() => import("./components/section-cards").then(m => ({ default: m.SectionCards })))
+const RecentActivity = lazy(() => import("./components/recent-activity").then(m => ({ default: m.RecentActivity })))
 
 export default function Page() {
   const { user } = useAuth()
@@ -49,12 +53,46 @@ export default function Page() {
       </div>
 
       <div className="@container/main px-4 lg:px-6 space-y-6">
-        <SectionCards />
+        <Suspense fallback={<CardsSkeleton />}>
+          <SectionCards />
+        </Suspense>
+        
         {(user?.role === "DIRECTOR" || user?.role === "SECRETARY" || user?.role === "PEDAGOGUE") && (
-          <ChartAreaInteractive />
+          <Suspense fallback={<ChartSkeleton />}>
+            <ChartAreaInteractive />
+          </Suspense>
         )}
-        <RecentActivity />
+        
+        <Suspense fallback={<ActivitySkeleton />}>
+          <RecentActivity />
+        </Suspense>
       </div>
     </>
+  )
+}
+
+// Loading Skeletons
+function CardsSkeleton() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {[...Array(4)].map((_, i) => (
+        <Skeleton key={i} className="h-32" />
+      ))}
+    </div>
+  )
+}
+
+function ChartSkeleton() {
+  return <Skeleton className="h-[400px] w-full" />
+}
+
+function ActivitySkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-48" />
+      {[...Array(5)].map((_, i) => (
+        <Skeleton key={i} className="h-16" />
+      ))}
+    </div>
   )
 }

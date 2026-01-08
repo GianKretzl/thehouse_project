@@ -1,50 +1,50 @@
 [
   {
     "id": 1,
-    "question": "O que é o NetSaber?",
-    "answer": "O NetSaber é uma plataforma de segurança desenvolvida para proteger você e sua família contra golpes online. Oferecemos verificação de links, tutoriais educativos e suporte especializado para compras seguras na internet.",
+    "question": "O que é o The House Institute?",
+    "answer": "O The House Institute é uma escola de inglês dedicada a fornecer educação de qualidade com metodologia moderna e professores altamente qualificados. Oferecemos cursos para todos os níveis, do Beginner ao Advanced.",
     "category": "Geral"
   },
   {
     "id": 2,
     "question": "Como faço para começar?",
-    "answer": "É muito simples! Crie sua conta gratuita, faça login e comece a usar o Verificador de Links imediatamente. Você pode verificar qualquer link antes de clicar nele.",
+    "answer": "É muito simples! Entre em contato conosco pelo WhatsApp (41) 99222-0134 ou telefone (41) 3383-3179 para agendar uma avaliação de nível e conhecer nossos cursos.",
     "category": "Geral"
   },
   {
     "id": 3,
-    "question": "O NetSaber é gratuito?",
-    "answer": "Sim! Oferecemos um plano gratuito com verificações ilimitadas de links e acesso aos tutoriais básicos. Planos premium oferecem recursos avançados e suporte prioritário.",
+    "question": "Quais níveis de inglês são oferecidos?",
+    "answer": "Oferecemos cursos do nível Beginner (A1) ao Advanced (C1), seguindo o padrão CEFR (Common European Framework of Reference for Languages). Cada nível é cuidadosamente estruturado para garantir seu progresso.",
     "category": "Geral"
   },
   {
     "id": 4,
-    "question": "Como verifico se um link é seguro?",
-    "answer": "Acesse a página 'Verificar Link', cole o endereço do site que deseja verificar e clique em 'Verificar'. Analisaremos o link e mostraremos se ele é seguro, suspeito ou perigoso.",
+    "question": "Como funciona a matrícula?",
+    "answer": "Após a avaliação de nível, você escolhe o horário que melhor se adequa à sua rotina e nossa secretaria realiza sua matrícula. Nossas turmas têm capacidade máxima de 15 alunos.",
     "category": "Geral"
   },
   {
     "id": 5,
     "question": "Como entro em contato com o suporte?",
-    "answer": "Você pode acessar nosso suporte através do chat em tempo real disponível na página 'Suporte Rápido', disponível 24/7. Também respondemos e-mails em suporte@netsaber.com.br.",
+    "answer": "Você pode nos contatar através do WhatsApp (41) 99222-0134, telefone (41) 3383-3179 ou pessoalmente na R. Tereza Nester, 275 - Afonso Pena, São José dos Pinhais - PR.",
     "category": "Geral"
   },
   {
     "id": 6,
-    "question": "Posso usar o NetSaber no celular?",
-    "answer": "Sim! Nossa plataforma é totalmente responsiva e funciona perfeitamente em smartphones e tablets. Um aplicativo dedicado está planejado para o futuro.",
+    "question": "Onde fica o The House Institute?",
+    "answer": "Estamos localizados na R. Tereza Nester, 275 - Afonso Pena, São José dos Pinhais - PR, CEP: 83045-290. Venha nos visitar!",
     "category": "Geral"
   },
   {
     "id": 7,
-    "question": "Como adiciono sites à minha lista segura?",
-    "answer": "Acesse 'Sites Confiáveis' no menu e clique em 'Adicionar Site'. Insira o nome e URL do site. Seus sites favoritos ficarão salvos para acesso rápido.",
+    "question": "Quais são os horários das aulas?",
+    "answer": "Oferecemos turmas nos períodos da manhã, tarde e noite para se adequar à sua rotina. Os horários específicos variam de acordo com o nível e disponibilidade. Consulte nossa secretaria para mais informações.",
     "category": "Recursos"
   },
   {
     "id": 8,
-    "question": "Os tutoriais são gratuitos?",
-    "answer": "Sim! Todos os tutoriais de segurança estão disponíveis gratuitamente para todos os usuários. São lições curtas e práticas sobre como se proteger online.",
+    "question": "Como acompanho meu progresso?",
+    "answer": "Os alunos têm acesso ao nosso portal online onde podem visualizar notas, frequência e conteúdo das aulas. Os professores registram diariamente o conteúdo ministrado e as avaliações.",
     "category": "Recursos"
   },
   {

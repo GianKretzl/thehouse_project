@@ -82,10 +82,22 @@ export interface Class {
   description: string | null;
   level: string | null;
   teacher_id: number | null;
+  teacher_name?: string | null;
   max_capacity: number;
   start_date: string | null;
   end_date: string | null;
   is_active: boolean;
+  created_at: string;
+  schedules?: Schedule[];
+}
+
+export interface Schedule {
+  id: number;
+  class_id: number;
+  weekday: number;  // 0=Segunda, 1=Terça, ..., 6=Domingo
+  start_time: string;
+  end_time: string;
+  room: string | null;
   created_at: string;
 }
 

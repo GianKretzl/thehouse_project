@@ -68,17 +68,19 @@ source venv/bin/activate
 # Instalar dependências
 pip install -r requirements.txt
 
-# Configurar .env (ver .env.example)
+# Configurar .env
 cp .env.example .env
+# Edite o .env com suas credenciais do PostgreSQL
 
-# Criar banco de dados
-# Certifique-se que PostgreSQL está rodando
-createdb thehouse_db
+# Subir o PostgreSQL via Docker (recomendado)
+cd ..
+docker-compose up -d postgres
+cd backend
 
-# Rodar migrações (quando implementadas)
+# Aplicar migrações do banco de dados
 alembic upgrade head
 
-# Iniciar servidor
+# Iniciar servidor de desenvolvimento
 uvicorn app.main:app --reload
 ```
 
@@ -89,9 +91,12 @@ cd frontend
 
 # Instalar dependências
 npm install
+# ou
+pnpm install
 
 # Configurar .env.local
 cp .env.local.example .env.local
+# Edite o .env.local se necessário
 
 # Iniciar desenvolvimento
 npm run dev
@@ -113,32 +118,51 @@ npm run dev
 
 ## 🔐 Autenticação
 
-O sistema usa JWT (JSON Web Tokens) com dois níveis de acesso:
+O sistema usa JWT (JSON Web Tokens) com múltiplos níveis de acesso:
 
-### Admin
-- Gerenciar professores
+### Director (Diretor)
+- Gerenciar professores, pedagogos e secretários
 - Gerenciar alunos
 - Criar e atribuir turmas
 - Definir horários
-- Visualizar todos os dados
+- Visualizar todos os dados do sistema
 
-### Professor
+### Pedagogue (Pedagogo)
+- Visualizar turmas e professores
+- Acompanhar desempenho dos alunos
+- Gerenciar conteúdo pedagógico
+
+### Secretary (Secretário)
+- Gerenciar matrículas
+- Visualizar informações de alunos
+- Emitir documentos
+
+### Teacher (Professor)
 - Visualizar suas turmas
 - Fazer chamadas
 - Lançar conteúdo das aulas
 - Lançar notas dos alunos
 
+### Admin (Administrador do Sistema)
+- Acesso total ao sistema
+- Gerenciar todas as funcionalidades
+
 ## 📝 Uso
+
+### Primeiro Setup
+
+Após iniciar o backend e aplicar as migrações, você pode criar o primeiro usuário via API ou script Python.
 
 ### Criar primeiro usuário Admin
 
 ```bash
-# Via API
+# Via API (POST)
 POST http://localhost:8000/api/v1/auth/register
 {
   "name": "Administrador",
   "email": "admin@thehouse.com.br",
-  "password": "senha123"
+  "password": "senha123",
+  "role": "ADMIN"
 }
 ```
 

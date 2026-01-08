@@ -42,7 +42,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
         <p className="text-muted-foreground">
-          Gerencie suas configurações e preferências da conta NetSaber
+          Gerencie suas configurações e preferências da conta The House
         </p>
       </div>
 

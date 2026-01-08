@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from app.core.database import get_db
 from app.api.dependencies import require_role
@@ -19,7 +19,10 @@ async def list_classes(
     """
     Listar todas as turmas (Admin vê todas, Professor vê apenas as suas)
     """
-    query = db.query(Class).filter(Class.is_active == True)
+    query = db.query(Class).options(
+        joinedload(Class.schedules),
+        joinedload(Class.teacher).joinedload(Teacher.user)
+    ).filter(Class.is_active == True)
     
     if current_user.role == UserRole.TEACHER:
         teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
@@ -27,7 +30,27 @@ async def list_classes(
             query = query.filter(Class.teacher_id == teacher.id)
     
     classes = query.offset(skip).limit(limit).all()
-    return classes
+    
+    # Adicionar nome do professor na resposta
+    result = []
+    for class_obj in classes:
+        class_dict = {
+            "id": class_obj.id,
+            "name": class_obj.name,
+            "description": class_obj.description,
+            "level": class_obj.level,
+            "teacher_id": class_obj.teacher_id,
+            "teacher_name": class_obj.teacher.user.name if class_obj.teacher else None,
+            "max_capacity": class_obj.max_capacity,
+            "start_date": class_obj.start_date,
+            "end_date": class_obj.end_date,
+            "is_active": class_obj.is_active,
+            "created_at": class_obj.created_at,
+            "schedules": class_obj.schedules
+        }
+        result.append(class_dict)
+    
+    return result
 
 
 @router.get("/{class_id}", response_model=ClassResponse)

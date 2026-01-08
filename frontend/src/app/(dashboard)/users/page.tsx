@@ -176,7 +176,7 @@ export default function UsersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Informações da Conta</CardTitle>
-          <CardDescription>Detalhes completos da sua conta NetSaber</CardDescription>
+          <CardDescription>Detalhes completos da sua conta The House</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">

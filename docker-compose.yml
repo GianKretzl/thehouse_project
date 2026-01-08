@@ -6,7 +6,7 @@ services:
     container_name: thehouse_postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: 141520
       POSTGRES_DB: thehouse_institute
     ports:
       - "5432:5432"

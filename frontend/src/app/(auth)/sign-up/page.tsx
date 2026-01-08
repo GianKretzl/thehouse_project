@@ -11,7 +11,7 @@ export default function SignUpPage() {
           <div className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-md">
             <Shield size={24} />
           </div>
-          <span className="text-xl font-bold">NetSaber</span>
+          <Logo size={80} />
         </Link>
         <SignupForm1 />
       </div>

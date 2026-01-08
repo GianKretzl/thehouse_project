@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 
-const STORAGE_KEY = "netsaber-search-history"
+const STORAGE_KEY = "thehouse-search-history"
 const MAX_HISTORY_ITEMS = 20
 
 export interface SearchHistoryItem {

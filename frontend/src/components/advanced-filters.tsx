@@ -215,7 +215,7 @@ export function AdvancedFilters({
                   htmlFor="verifiedStores" 
                   className="text-sm font-normal cursor-pointer"
                 >
-                  Somente lojas verificadas pelo NetSaber
+                  Somente lojas verificadas pelo The House
                 </Label>
               </div>
             </div>

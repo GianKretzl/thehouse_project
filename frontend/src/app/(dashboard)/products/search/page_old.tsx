@@ -490,7 +490,7 @@ export default function ProductSearchPage() {
               <Shield className="h-6 w-6 text-green-600 dark:text-green-400 flex-shrink-0" />
               <div>
                 <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">
-                  Todas as Lojas são Verificadas pelo NetSaber
+                  Todas as Lojas são Verificadas pelo The House
                 </h3>
                 <p className="text-sm text-green-700 dark:text-green-300 mb-2">
                   Cada loja listada passou por nossa verificação de segurança. Analisamos certificados SSL, 

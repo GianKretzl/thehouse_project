@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "NetSaber - Login",
+  title: "The House - Login",
   description: "Sign in to your account or create a new one",
 };
 

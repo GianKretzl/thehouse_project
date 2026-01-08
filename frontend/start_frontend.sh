@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script para iniciar o frontend em background de forma persistente
 
-echo "🚀 Iniciando NetSaber Frontend..."
+echo "🚀 Iniciando The House Frontend..."
 
 # Verificar se já existe processo na porta 3000
 EXISTING_PID=$(lsof -t -i:3000 2>/dev/null)

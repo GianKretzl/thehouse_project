@@ -426,7 +426,7 @@ export default function ProductAgentPage() {
           <p>
             Nosso agente usa inteligência artificial para entender suas necessidades e
             recomendar os melhores produtos. Todas as recomendações são de lojas verificadas
-            pelo NetSaber, garantindo sua segurança em cada compra. Quanto mais você conversa,
+            pelo The House, garantindo sua segurança em cada compra. Quanto mais você conversa,
             melhor o agente entende suas preferências!
           </p>
         </CardContent>

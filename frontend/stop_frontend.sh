@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script para parar o frontend
 
-echo "🛑 Parando NetSaber Frontend..."
+echo "🛑 Parando The House Frontend..."
 
 # Ler PID do arquivo
 if [ -f logs/frontend.pid ]; then

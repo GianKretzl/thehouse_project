@@ -1,5 +1,5 @@
 /**
- * Serviço de API - NetSaber Frontend
+ * Serviço de API - The House Frontend
  * Comunicação com o backend FastAPI
  */
 
@@ -102,7 +102,9 @@ export async function fetchApi<T>(
   };
 
   try {
-    console.log(`[API] Fazendo requisição: ${options.method || 'GET'} ${API_V1}${endpoint}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[API] Fazendo requisição: ${options.method || 'GET'} ${API_V1}${endpoint}`);
+    }
     const response = await fetch(`${API_V1}${endpoint}`, config);
     
     if (!response.ok) {
@@ -116,7 +118,9 @@ export async function fetchApi<T>(
         errorDetail = response.statusText || errorDetail;
       }
       
-      console.error(`[API] Erro ${response.status}:`, errorDetail);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`[API] Erro ${response.status}:`, errorDetail);
+      }
       throw new ApiException(response.status, errorDetail);
     }
 
@@ -126,7 +130,9 @@ export async function fetchApi<T>(
     }
 
     const data = await response.json();
-    console.log(`[API] Resposta recebida:`, data);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[API] Resposta recebida:`, data);
+    }
     return data;
   } catch (error) {
     if (error instanceof ApiException) {

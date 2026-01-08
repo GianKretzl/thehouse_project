@@ -85,7 +85,8 @@ function getNavGroups(userRole?: string) {
     })
   }
 
-  if (hasAdminAccess || hasPedagogicalAccess) {
+  // Turmas - Admin/Pedagogo veem todas, Professor vê suas turmas
+  if (hasAdminAccess || hasPedagogicalAccess || hasTeacherAccess) {
     academicItems.push({
       title: "Turmas",
       url: "/turmas",

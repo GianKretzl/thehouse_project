@@ -45,6 +45,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
    */
   async function loadUser() {
     try {
+      setLoading(true);
       const tokens = authApi.getTokens();
 
       if (!tokens.accessToken) {

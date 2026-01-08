@@ -127,12 +127,12 @@ const securityCourses: Course[] = [
   },
 ]
 
-// Tutoriais do Sistema NetSaber
+// Tutoriais do Sistema The House
 const systemTutorials: Course[] = [
   {
     id: 7,
-    title: "Como Usar o Painel de Segurança",
-    description: "Aprenda a navegar pelo painel principal do NetSaber. Entenda cada indicador, gráfico e como interpretar as informações de segurança.",
+    title: "Como Usar o Portal do Aluno",
+    description: "Aprenda a navegar pelo portal do aluno do The House. Entenda como verificar notas, frequência e conteúdo das aulas.",
     duration: "12 min",
     lessons: 1,
     category: "sistema",
@@ -144,8 +144,8 @@ const systemTutorials: Course[] = [
   },
   {
     id: 8,
-    title: "Verificando Links Suspeitos",
-    description: "Passo a passo de como usar a ferramenta de verificação de links do NetSaber. Cole um link e entenda os resultados da análise.",
+    title: "Acompanhando seu Progresso",
+    description: "Passo a passo de como acompanhar seu desenvolvimento no aprendizado de inglês através do portal.",
     duration: "8 min",
     lessons: 1,
     category: "sistema",
@@ -196,8 +196,8 @@ const systemTutorials: Course[] = [
   },
   {
     id: 12,
-    title: "Procurando Produtos Seguros",
-    description: "Como usar a busca de produtos do NetSaber. Encontre ofertas em lojas verificadas e compare preços com segurança.",
+    title: "Material Didático Online",
+    description: "Como acessar e utilizar os materiais didáticos disponibilizados pelo The House através do portal.",
     duration: "9 min",
     lessons: 1,
     category: "sistema",
@@ -246,7 +246,7 @@ export default function CoursesAndTutorialsPage() {
       seguranca: { label: "Segurança", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400" },
       compras: { label: "Compras Online", color: "bg-purple-500/10 text-purple-700 dark:text-purple-400" },
       tecnologia: { label: "Tecnologia", color: "bg-green-500/10 text-green-700 dark:text-green-400" },
-      sistema: { label: "Sistema NetSaber", color: "bg-orange-500/10 text-orange-700 dark:text-orange-400" },
+      sistema: { label: "Sistema The House", color: "bg-orange-500/10 text-orange-700 dark:text-orange-400" },
     }
     return categories[category] || categories.seguranca
   }
@@ -257,7 +257,7 @@ export default function CoursesAndTutorialsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Cursos e Tutoriais</h1>
         <p className="text-muted-foreground">
-          Aprenda sobre segurança online, compras pela internet e como usar o NetSaber
+          Aprenda sobre o sistema educacional e como usar o portal The House
         </p>
       </div>
 
@@ -487,7 +487,7 @@ export default function CoursesAndTutorialsPage() {
           </p>
           <p>
             <strong>Tutoriais do Sistema:</strong> Guias rápidos e práticos de como usar cada 
-            funcionalidade do NetSaber. Passo a passo simples para você aproveitar ao máximo 
+            funcionalidade do The House. Passo a passo simples para você aproveitar ao máximo 
             nossa plataforma.
           </p>
         </CardContent>
