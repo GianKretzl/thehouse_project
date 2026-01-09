@@ -16,7 +16,6 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
-import { SidebarNotification } from "@/components/sidebar-notification"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -173,15 +172,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
-                <div className="flex items-center justify-center">
-                  <Logo size={32} />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <div className="flex items-center gap-1">
-                    <span className="font-bold text-[#1e3a8a]">The</span>
-                    <span className="font-bold text-[#b91c1c]">House</span>
-                  </div>
-                  <span className="truncate text-xs">Gestão Educacional</span>
+                <div className="flex items-center justify-center w-full py-5">
+                  <Logo size={280} />
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -194,8 +186,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <SidebarNotification />
-  <NavUser user={navUser} />
+        <NavUser user={navUser} />
       </SidebarFooter>
     </Sidebar>
   )

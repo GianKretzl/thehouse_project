@@ -124,25 +124,17 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
   const commandRef = React.useRef<HTMLDivElement>(null)
 
   const searchItems: SearchItem[] = [
-    // Dashboards
-    { title: "Painel de Segurança", url: "/dashboard", group: "Painéis", icon: LayoutDashboard },
-    { title: "Análise Detalhada", url: "/dashboard-2", group: "Painéis", icon: LayoutPanelLeft },
+    // Dashboard
+    { title: "Dashboard", url: "/dashboard", group: "Principal", icon: LayoutDashboard },
+    { title: "Calendário", url: "/calendar", group: "Principal", icon: LayoutPanelLeft },
 
-    // Main Features
-    { title: "Verificar Link", url: "/verify", group: "Ferramentas", icon: Shield },
-    { title: "Sites Confiáveis", url: "/trusted-sites", group: "Ferramentas", icon: CheckCircle },
-    { title: "Tutoriais", url: "/courses-tutorials", group: "Ferramentas", icon: HelpCircle },
-    { title: "Chat de Suporte", url: "/chat", group: "Ferramentas", icon: MessageCircle },
+    // Gestão Acadêmica
+    { title: "Turmas", url: "/turmas", group: "Gestão Acadêmica", icon: LayoutPanelLeft },
 
-    // Settings
-    { title: "Meus Dados", url: "/settings/user", group: "Configurações", icon: User },
+    // Configurações
+    { title: "Perfil", url: "/settings/user", group: "Configurações", icon: User },
     { title: "Conta", url: "/settings/account", group: "Configurações", icon: Settings },
     { title: "Aparência", url: "/settings/appearance", group: "Configurações", icon: Palette },
-    { title: "Notificações", url: "/settings/notifications", group: "Configurações", icon: Bell },
-
-    // Pages
-    { title: "Perguntas Frequentes", url: "/faqs", group: "Páginas", icon: HelpCircle },
-    { title: "Preços", url: "/pricing", group: "Páginas", icon: CreditCard },
   ]
 
   const groupedItems = searchItems.reduce((acc, item) => {

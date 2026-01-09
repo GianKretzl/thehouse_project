@@ -37,6 +37,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
+import { getClassCategory, getAgeGroupBadgeClass } from "@/lib/class-categories"
 
 export default function ClassDetailPage() {
   const params = useParams()
@@ -73,20 +74,24 @@ export default function ClassDetailPage() {
   const [loadingAssessments, setLoadingAssessments] = useState(false)
   const [assessmentConsultView, setAssessmentConsultView] = useState<"avaliacoes" | "alunos">("avaliacoes")
   const [studentAssessmentMatrix, setStudentAssessmentMatrix] = useState<any[]>([])
+  const [dashboardStats, setDashboardStats] = useState<any>({
+    classAttendanceRate: 0,
+    lastLessonAttendance: { present: 0, total: 0 },
+    averageGrade: 0,
+    maxGrade: 0,
+    minGrade: 0,
+    medianGrade: 0,
+    completedLessons: 0,
+    totalExpectedLessons: 0,
+    lowAttendanceStudents: [],
+    lowGradeStudents: [],
+    recentActivities: [],
+    studentDetails: {}
+  })
+  const [loadingStats, setLoadingStats] = useState(false)
 
   const isTeacher = user?.role === "TEACHER"
   const canEdit = user?.role === "TEACHER"
-
-  // Mock data - em produção viria da API
-  const mockStudents = [
-    { id: "1", name: "João Silva", attendance: 92, performance: 85, activities: 15 },
-    { id: "2", name: "Maria Santos", attendance: 88, performance: 90, activities: 18 },
-    { id: "3", name: "Pedro Costa", attendance: 95, performance: 78, activities: 12 },
-    { id: "4", name: "Ana Oliveira", attendance: 85, performance: 88, activities: 16 },
-    { id: "5", name: "Lucas Souza", attendance: 90, performance: 82, activities: 14 },
-  ]
-
-  const currentStudent = mockStudents.find(s => s.id === selectedStudent)
 
   useEffect(() => {
     loadClassData()
@@ -94,6 +99,12 @@ export default function ClassDetailPage() {
     loadRegisteredLessons()
     loadAssessments()
   }, [classId])
+
+  useEffect(() => {
+    if (enrolledStudents.length > 0 && registeredLessons.length > 0) {
+      loadDashboardStats()
+    }
+  }, [enrolledStudents, registeredLessons, assessments])
 
   const loadClassData = async () => {
     try {
@@ -442,6 +453,147 @@ export default function ClassDetailPage() {
     }
   }
 
+  const loadDashboardStats = async () => {
+    if (!enrolledStudents.length) return
+    
+    try {
+      setLoadingStats(true)
+      
+      // 1. Calcular taxa de presença geral da turma
+      let totalAttendances = 0
+      let totalPresences = 0
+      const studentAttendanceRates: Record<number, { present: number, total: number }> = {}
+      
+      for (const lesson of registeredLessons) {
+        const attendances = await lessonsApi.getAttendances(lesson.id)
+        totalAttendances += attendances.length
+        
+        attendances.forEach((att: any) => {
+          if (!studentAttendanceRates[att.student_id]) {
+            studentAttendanceRates[att.student_id] = { present: 0, total: 0 }
+          }
+          studentAttendanceRates[att.student_id].total++
+          
+          if (att.status === 'present' || att.status === 'late') {
+            totalPresences++
+            studentAttendanceRates[att.student_id].present++
+          }
+        })
+      }
+      
+      const classAttendanceRate = totalAttendances > 0 ? Math.round((totalPresences / totalAttendances) * 100) : 0
+      
+      // 2. Última aula presença
+      let lastLessonAttendance = { present: 0, total: 0 }
+      if (registeredLessons.length > 0) {
+        const lastLesson = registeredLessons[registeredLessons.length - 1]
+        lastLessonAttendance = {
+          present: lastLesson.presentCount || 0,
+          total: lastLesson.totalStudents || 0
+        }
+      }
+      
+      // 3. Calcular média de notas
+      const grades = assessments.map((a: any) => a.grade)
+      const averageGrade = grades.length > 0 ? parseFloat((grades.reduce((a: number, b: number) => a + b, 0) / grades.length).toFixed(1)) : 0
+      const maxGrade = grades.length > 0 ? Math.max(...grades) : 0
+      const minGrade = grades.length > 0 ? Math.min(...grades) : 0
+      const sortedGrades = [...grades].sort((a, b) => a - b)
+      const medianGrade = sortedGrades.length > 0 ? sortedGrades[Math.floor(sortedGrades.length / 2)] : 0
+      
+      // 4. Calcular estatísticas por aluno
+      const studentDetails: Record<string, any> = {}
+      for (const student of enrolledStudents) {
+        const studentId = student.id
+        const attendance = studentAttendanceRates[studentId] || { present: 0, total: 0 }
+        const attendanceRate = attendance.total > 0 ? Math.round((attendance.present / attendance.total) * 100) : 0
+        
+        const studentGrades = assessments.filter((a: any) => a.student_id === studentId).map((a: any) => a.grade)
+        const avgGrade = studentGrades.length > 0 ? parseFloat((studentGrades.reduce((a: number, b: number) => a + b, 0) / studentGrades.length).toFixed(1)) : 0
+        
+        studentDetails[studentId] = {
+          id: studentId,
+          name: student.name,
+          attendance: attendanceRate,
+          performance: avgGrade,
+          activities: studentGrades.length
+        }
+      }
+      
+      // 5. Alunos com baixa frequência (< 75%)
+      const lowAttendanceStudents = Object.values(studentDetails).filter((s: any) => s.attendance < 75 && s.attendance > 0)
+      
+      // 6. Alunos com notas baixas (< 7.0 ou abaixo da média)
+      const lowGradeStudents = Object.values(studentDetails).filter((s: any) => s.performance > 0 && s.performance < Math.max(7.0, averageGrade - 1))
+      
+      // 7. Atividades recentes (últimas 3 aulas ou avaliações)
+      const recentActivities = []
+      
+      // Adicionar últimas aulas
+      const recentLessons = registeredLessons.slice(-2).reverse()
+      for (const lesson of recentLessons) {
+        const lessonDate = parseLocalDate(lesson.date)
+        const daysAgo = Math.floor((new Date().getTime() - lessonDate.getTime()) / (1000 * 60 * 60 * 24))
+        const timeAgo = daysAgo === 0 ? 'Hoje' : daysAgo === 1 ? 'Ontem' : `Há ${daysAgo} dias`
+        
+        if (lesson.content) {
+          recentActivities.push({
+            type: 'content',
+            title: `Conteúdo: ${lesson.content.substring(0, 50)}${lesson.content.length > 50 ? '...' : ''}`,
+            time: timeAgo
+          })
+        }
+        
+        recentActivities.push({
+          type: 'attendance',
+          title: 'Frequência registrada',
+          time: timeAgo
+        })
+      }
+      
+      // Adicionar avaliação mais recente
+      if (assessments.length > 0) {
+        const sortedAssessments = [...assessments].sort((a: any, b: any) => {
+          return new Date(b.assessment_date).getTime() - new Date(a.assessment_date).getTime()
+        })
+        const recentAssessment = sortedAssessments[0]
+        const assessmentDate = new Date(recentAssessment.assessment_date)
+        const daysAgo = Math.floor((new Date().getTime() - assessmentDate.getTime()) / (1000 * 60 * 60 * 24))
+        const timeAgo = daysAgo === 0 ? 'Hoje' : daysAgo === 1 ? 'Ontem' : daysAgo < 7 ? `Há ${daysAgo} dias` : `Há ${Math.floor(daysAgo / 7)} semana${Math.floor(daysAgo / 7) > 1 ? 's' : ''}`
+        
+        recentActivities.push({
+          type: 'assessment',
+          title: `Avaliação: ${recentAssessment.type}`,
+          time: timeAgo
+        })
+      }
+      
+      // 8. Calcular aulas esperadas vs realizadas
+      const completedLessons = registeredLessons.length
+      // Estimar aulas esperadas baseado nos horários da turma
+      const totalExpectedLessons = classData?.schedules?.length ? classData.schedules.length * 20 : 40 // 20 semanas estimadas
+      
+      setDashboardStats({
+        classAttendanceRate,
+        lastLessonAttendance,
+        averageGrade,
+        maxGrade,
+        minGrade,
+        medianGrade,
+        completedLessons,
+        totalExpectedLessons,
+        lowAttendanceStudents,
+        lowGradeStudents,
+        recentActivities: recentActivities.slice(0, 3),
+        studentDetails
+      })
+    } catch (error) {
+      console.error("Erro ao calcular estatísticas:", error)
+    } finally {
+      setLoadingStats(false)
+    }
+  }
+
   const parseLocalDate = (dateString: string) => {
     // Converte string "YYYY-MM-DD" para Date local (sem conversão de timezone)
     const [year, month, day] = dateString.split('-').map(Number)
@@ -550,7 +702,23 @@ export default function ClassDetailPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{classData.name}</h1>
             <div className="flex items-center gap-2 mt-2">
-              {classData.level && <Badge variant="outline">{classData.level}</Badge>}
+              {classData.level && (() => {
+                const category = getClassCategory(classData.level)
+                return category ? (
+                  <>
+                    <Badge 
+                      className={`${getAgeGroupBadgeClass(category.ageGroup)} border font-semibold`}
+                    >
+                      {category.ageGroup}
+                    </Badge>
+                    <Badge variant="outline" className="font-medium">
+                      {category.level}
+                    </Badge>
+                  </>
+                ) : (
+                  <Badge variant="outline">{classData.level}</Badge>
+                )
+              })()}
               {classData.is_active ? (
                 <Badge variant="default">Ativa</Badge>
               ) : (
@@ -565,8 +733,8 @@ export default function ClassDetailPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Visão Geral da Turma</SelectItem>
-            {mockStudents.map((student) => (
-              <SelectItem key={student.id} value={student.id}>
+            {enrolledStudents.map((student) => (
+              <SelectItem key={student.id} value={student.id.toString()}>
                 {student.name}
               </SelectItem>
             ))}
@@ -661,9 +829,13 @@ export default function ClassDetailPage() {
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24 / 40</div>
+            <div className="text-2xl font-bold">
+              {dashboardStats.completedLessons} / {dashboardStats.totalExpectedLessons}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              60% do programa
+              {dashboardStats.totalExpectedLessons > 0 
+                ? Math.round((dashboardStats.completedLessons / dashboardStats.totalExpectedLessons) * 100)
+                : 0}% do programa
             </p>
           </CardContent>
         </Card>
@@ -683,12 +855,18 @@ export default function ClassDetailPage() {
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
                   <span className="text-sm">Presentes</span>
                 </div>
-                <span className="text-2xl font-bold">90%</span>
+                <span className="text-2xl font-bold">{dashboardStats.classAttendanceRate}%</span>
               </div>
-              <Progress value={90} className="h-2" />
+              <Progress value={dashboardStats.classAttendanceRate} className="h-2" />
               <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Última aula: 4/5 alunos presentes</span>
-                <span>80%</span>
+                <span>
+                  Última aula: {dashboardStats.lastLessonAttendance.present}/{dashboardStats.lastLessonAttendance.total} alunos presentes
+                </span>
+                <span>
+                  {dashboardStats.lastLessonAttendance.total > 0
+                    ? Math.round((dashboardStats.lastLessonAttendance.present / dashboardStats.lastLessonAttendance.total) * 100)
+                    : 0}%
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -704,21 +882,31 @@ export default function ClassDetailPage() {
                   <TrendingUp className="h-5 w-5 text-blue-500" />
                   <span className="text-sm">Nota Média</span>
                 </div>
-                <span className="text-2xl font-bold">8.5</span>
+                <span className="text-2xl font-bold">
+                  {dashboardStats.averageGrade > 0 ? dashboardStats.averageGrade.toFixed(1) : '-'}
+                </span>
               </div>
-              <Progress value={85} className="h-2" />
+              {dashboardStats.averageGrade > 0 && (
+                <Progress value={dashboardStats.averageGrade * 10} className="h-2" />
+              )}
               <div className="grid grid-cols-3 gap-2 text-sm">
                 <div>
                   <div className="text-muted-foreground">Máxima</div>
-                  <div className="font-semibold">9.5</div>
+                  <div className="font-semibold">
+                    {dashboardStats.maxGrade > 0 ? dashboardStats.maxGrade.toFixed(1) : '-'}
+                  </div>
                 </div>
                 <div>
                   <div className="text-muted-foreground">Mínima</div>
-                  <div className="font-semibold">7.0</div>
+                  <div className="font-semibold">
+                    {dashboardStats.minGrade > 0 ? dashboardStats.minGrade.toFixed(1) : '-'}
+                  </div>
                 </div>
                 <div>
                   <div className="text-muted-foreground">Mediana</div>
-                  <div className="font-semibold">8.5</div>
+                  <div className="font-semibold">
+                    {dashboardStats.medianGrade > 0 ? dashboardStats.medianGrade.toFixed(1) : '-'}
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -731,39 +919,35 @@ export default function ClassDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                      <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm">Conteúdo: Unit 5</div>
-                      <div className="text-xs text-muted-foreground">Há 2 dias</div>
-                    </div>
+                {dashboardStats.recentActivities.length > 0 ? (
+                  dashboardStats.recentActivities.map((activity: any, index: number) => {
+                    const iconMap = {
+                      content: { Icon: BookOpen, bg: 'bg-blue-100 dark:bg-blue-900', color: 'text-blue-600 dark:text-blue-400' },
+                      attendance: { Icon: CheckCircle2, bg: 'bg-green-100 dark:bg-green-900', color: 'text-green-600 dark:text-green-400' },
+                      assessment: { Icon: Target, bg: 'bg-orange-100 dark:bg-orange-900', color: 'text-orange-600 dark:text-orange-400' }
+                    }
+                    const config = iconMap[activity.type as keyof typeof iconMap] || iconMap.content
+                    const Icon = config.Icon
+                    
+                    return (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`h-8 w-8 rounded-full ${config.bg} flex items-center justify-center`}>
+                            <Icon className={`h-4 w-4 ${config.color}`} />
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">{activity.title}</div>
+                            <div className="text-xs text-muted-foreground">{activity.time}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div className="text-center text-sm text-muted-foreground py-4">
+                    Nenhuma atividade registrada ainda
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm">Frequência registrada</div>
-                      <div className="text-xs text-muted-foreground">Há 2 dias</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                      <Target className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm">Avaliação Unit 4</div>
-                      <div className="text-xs text-muted-foreground">Há 1 semana</div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -775,30 +959,52 @@ export default function ClassDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">2 alunos com baixa frequência</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Frequência abaixo de 75%
+                {dashboardStats.lowAttendanceStudents.length > 0 && (
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
+                    <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">
+                        {dashboardStats.lowAttendanceStudents.length} aluno{dashboardStats.lowAttendanceStudents.length > 1 ? 's' : ''} com baixa frequência
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Frequência abaixo de 75%
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
-                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">1 aluno com nota abaixo da média</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Necessita atenção especial
+                )}
+                {dashboardStats.lowGradeStudents.length > 0 && (
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">
+                        {dashboardStats.lowGradeStudents.length} aluno{dashboardStats.lowGradeStudents.length > 1 ? 's' : ''} com nota abaixo da média
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Necessita{dashboardStats.lowGradeStudents.length > 1 ? 'm' : ''} atenção especial
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+                {dashboardStats.lowAttendanceStudents.length === 0 && dashboardStats.lowGradeStudents.length === 0 && (
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">Tudo certo!</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Nenhuma pendência no momento
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
             </div>
-          ) : currentStudent ? (
+          ) : dashboardStats.studentDetails[selectedStudent] ? (
             // Dashboard do Aluno Específico
+            (() => {
+              const currentStudent = dashboardStats.studentDetails[selectedStudent]
+              return (
             <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
@@ -920,6 +1126,8 @@ export default function ClassDetailPage() {
             </CardContent>
           </Card>
             </div>
+              )
+            })()
           ) : null}
         </TabsContent>
 
@@ -1640,9 +1848,14 @@ export default function ClassDetailPage() {
                         const hasError = grade !== null && !isNaN(grade) && (grade > maxGradeNum || grade > 10)
                         
                         return (
-                          <div key={student.id} className="flex items-center justify-between gap-4">
-                            <span className="text-sm font-medium flex-1">{student.name}</span>
-                            <div className="flex items-center gap-2">
+                          <div key={student.id}>
+                            {hasError && (
+                              <div className="text-xs text-red-500 mb-1">
+                                Nota maior que a máxima
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between gap-4">
+                              <span className="text-sm font-medium flex-1">{student.name}</span>
                               <input
                                 type="text"
                                 className={cn(
@@ -1656,11 +1869,6 @@ export default function ClassDetailPage() {
                                   [student.id]: e.target.value
                                 })}
                               />
-                              {hasError && (
-                                <span className="text-xs text-red-500 whitespace-nowrap">
-                                  Nota maior que a máxima
-                                </span>
-                              )}
                             </div>
                           </div>
                         )

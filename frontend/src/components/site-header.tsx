@@ -2,17 +2,18 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { CommandSearch, SearchTrigger } from "@/components/command-search"
 import { ModeToggle } from "@/components/mode-toggle"
+import { useAuth } from "@/contexts/auth-context"
 // import { NotificationsBadge } from "@/components/notifications-badge" // Desabilitado: backend não tem notificações
-// topbar no longer shows user — user is only in the sidebar
 
 export function SiteHeader() {
-  // no topbar user
   const [searchOpen, setSearchOpen] = React.useState(false)
+  const { logout } = useAuth()
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -26,46 +27,33 @@ export function SiteHeader() {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
+  const handleLogout = () => {
+    logout()
+  }
+
   return (
     <>
       <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-        <div className="flex w-full items-center gap-1 px-4 py-3 lg:gap-2 lg:px-6">
+        <div className="flex w-full items-center gap-1 px-4 py-3 lg:gap-4 lg:px-6">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
             className="mx-2 data-[orientation=vertical]:h-4"
           />
-          <div className="flex-1 max-w-sm">
+          <div className="flex-[2]">
             <SearchTrigger onClick={() => setSearchOpen(true)} />
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-                          <Link
-                href="/verify"
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
-                Verificar Link
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-              <a
-                href="/faqs"
-                className="dark:text-foreground"
-              >
-                Ajuda
-              </a>
-            </Button>
-            <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-              <a
-                href="/courses-tutorials"
-                className="dark:text-foreground"
-              >
-                Tutoriais
-              </a>
-            </Button>
-            {/* <NotificationsBadge /> */}
+          <div className="flex items-center gap-2 shrink-0">
             <ModeToggle />
-            {/* topbar intentionally empty for user info; sidebar contains user menu */}
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleLogout}
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950"
+            >
+              <LogOut className="h-8 w-8" />
+              <span className="hidden sm:inline">Sair</span>
+            </Button>
           </div>
         </div>
       </header>

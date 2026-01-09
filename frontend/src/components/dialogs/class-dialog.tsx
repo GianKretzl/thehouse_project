@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { classesApi, teachersApi, Class, ClassCreate, Teacher } from "@/lib/educational-api"
 import { Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { getAllLevels } from "@/lib/class-categories"
 
 interface ClassDialogProps {
   open: boolean
@@ -142,9 +143,13 @@ export function ClassDialog({ open, onOpenChange, classItem, onSuccess }: ClassD
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Ex: 5º Ano A"
+                placeholder="Ex: K1, A2, F3..."
                 required
+                maxLength={3}
               />
+              <p className="text-xs text-muted-foreground">
+                Use formato: Letra + Número (máx. 3 caracteres). Ex: K1 para Kids, A1 para Adults
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -160,13 +165,40 @@ export function ClassDialog({ open, onOpenChange, classItem, onSuccess }: ClassD
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="level">Nível</Label>
-                <Input
-                  id="level"
+                <Label htmlFor="level">Nível *</Label>
+                <Select
                   value={formData.level}
-                  onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                  placeholder="Ex: Fundamental I, Médio..."
-                />
+                  onValueChange={(value) => setFormData({ ...formData, level: value })}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o nível" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* Kids Levels */}
+                    <div className="px-2 py-1.5 text-sm font-semibold text-red-700 bg-red-50 dark:bg-red-900/20 dark:text-red-300">
+                      Kids
+                    </div>
+                    {getAllLevels()
+                      .filter(l => l.ageGroup === 'Kids')
+                      .map((level, idx) => (
+                        <SelectItem key={`kids-${idx}`} value={level.level}>
+                          {level.level}
+                        </SelectItem>
+                      ))}
+                    {/* Adults Levels */}
+                    <div className="px-2 py-1.5 text-sm font-semibold text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-300 mt-2">
+                      Adults
+                    </div>
+                    {getAllLevels()
+                      .filter(l => l.ageGroup === 'Adults')
+                      .map((level, idx) => (
+                        <SelectItem key={`adults-${idx}`} value={level.level}>
+                          {level.level}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="max_capacity">Capacidade Máxima *</Label>

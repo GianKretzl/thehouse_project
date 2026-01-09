@@ -90,7 +90,6 @@ export function NavUser({
                   {user.email}
                 </span>
               </div>
-              <EllipsisVertical className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -125,18 +124,6 @@ export function NavUser({
                 <Link href="/settings/account">
                   <CircleUser />
                   Conta
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link href="/settings/billing">
-                  <CreditCard />
-                  Cobrança
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link href="/settings/notifications">
-                  <BellDot />
-                  Notificações
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

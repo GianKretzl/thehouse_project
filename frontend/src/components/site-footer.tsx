@@ -12,10 +12,7 @@ export function SiteFooter() {
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            Sistema completo para gestão escolar. Educação de qualidade ao seu alcance.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            © 2025 The House Platform. Todos os direitos reservados.
+            © 2026 The House Platform. Todos os direitos reservados.
           </p>
         </div>
       </div>

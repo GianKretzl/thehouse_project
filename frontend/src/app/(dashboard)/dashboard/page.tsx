@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 const ChartAreaInteractive = lazy(() => import("./components/chart-area-interactive").then(m => ({ default: m.ChartAreaInteractive })))
 const SectionCards = lazy(() => import("./components/section-cards").then(m => ({ default: m.SectionCards })))
 const RecentActivity = lazy(() => import("./components/recent-activity").then(m => ({ default: m.RecentActivity })))
+const TeacherPerformanceCharts = lazy(() => import("./components/teacher-performance-charts").then(m => ({ default: m.TeacherPerformanceCharts })))
 
 export default function Page() {
   const { user } = useAuth()
@@ -56,6 +57,12 @@ export default function Page() {
         <Suspense fallback={<CardsSkeleton />}>
           <SectionCards />
         </Suspense>
+        
+        {user?.role === "TEACHER" && (
+          <Suspense fallback={<ChartSkeleton />}>
+            <TeacherPerformanceCharts />
+          </Suspense>
+        )}
         
         {(user?.role === "DIRECTOR" || user?.role === "SECRETARY" || user?.role === "PEDAGOGUE") && (
           <Suspense fallback={<ChartSkeleton />}>

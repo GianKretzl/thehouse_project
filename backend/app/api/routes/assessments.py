@@ -24,9 +24,12 @@ async def list_assessments(
     """
     query = db.query(Assessment)
     
+    # Always join with Lesson to enable filters
+    query = query.join(Lesson)
+    
     # Filtrar por turma (class_id)
     if class_id:
-        query = query.join(Lesson).filter(Lesson.class_id == class_id)
+        query = query.filter(Lesson.class_id == class_id)
     
     # Filtrar por aula específica
     if lesson_id:
@@ -40,7 +43,7 @@ async def list_assessments(
     if current_user.role == UserRole.TEACHER:
         teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
         if teacher:
-            query = query.join(Lesson).join(Class).filter(Class.teacher_id == teacher.id)
+            query = query.join(Class).filter(Class.teacher_id == teacher.id)
     
     assessments = query.offset(skip).limit(limit).all()
     return assessments

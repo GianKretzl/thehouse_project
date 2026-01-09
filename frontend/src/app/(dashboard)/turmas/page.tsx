@@ -25,6 +25,7 @@ import { ClassDialog } from "@/components/dialogs/class-dialog"
 import { DeleteConfirmDialog } from "@/components/dialogs/delete-confirm-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/contexts/auth-context"
+import { getClassCategory, getAgeGroupBadgeClass } from "@/lib/class-categories"
 
 type ViewMode = 'list' | 'grid'
 
@@ -255,7 +256,23 @@ export default function ClassesPage() {
                       </TableCell>
                       <TableCell>
                         {classItem.level ? (
-                          <Badge variant="outline">{classItem.level}</Badge>
+                          (() => {
+                            const category = getClassCategory(classItem.level)
+                            return category ? (
+                              <div className="flex flex-col gap-1">
+                                <Badge 
+                                  className={`${getAgeGroupBadgeClass(category.ageGroup)} border font-semibold`}
+                                >
+                                  {category.ageGroup}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground font-medium">
+                                  {category.level}
+                                </span>
+                              </div>
+                            ) : (
+                              <Badge variant="outline">{classItem.level}</Badge>
+                            )
+                          })()
                         ) : (
                           "-"
                         )}
@@ -331,9 +348,23 @@ export default function ClassesPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <CardTitle className="text-lg">{classItem.name}</CardTitle>
-                        {classItem.level && (
-                          <Badge variant="outline" className="mt-2">{classItem.level}</Badge>
-                        )}
+                        {classItem.level && (() => {
+                          const category = getClassCategory(classItem.level)
+                          return category ? (
+                            <div className="flex flex-col gap-1 mt-2">
+                              <Badge 
+                                className={`${getAgeGroupBadgeClass(category.ageGroup)} border font-semibold w-fit`}
+                              >
+                                {category.ageGroup}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground font-medium">
+                                {category.level}
+                              </span>
+                            </div>
+                          ) : (
+                            <Badge variant="outline" className="mt-2">{classItem.level}</Badge>
+                          )
+                        })()}
                       </div>
                     </div>
                   </CardHeader>

@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { TrendingUp, Users, GraduationCap, BookOpen, ClipboardCheck, Calendar, FileText } from "lucide-react"
-import { studentsApi, teachersApi, classesApi } from "@/lib/educational-api"
+import { TrendingUp, Users, GraduationCap, BookOpen, ClipboardCheck, Calendar, FileText, CheckCircle2 } from "lucide-react"
+import { studentsApi, teachersApi, classesApi, lessonsApi, assessmentsApi } from "@/lib/educational-api"
 import { useAuth } from "@/contexts/auth-context"
+import { format, startOfWeek, endOfWeek } from "date-fns"
 
 import { Badge } from "@/components/ui/badge"
 import {
@@ -24,16 +25,120 @@ export function SectionCards() {
     totalClasses: 0,
     activeClasses: 0,
   })
+  const [teacherStats, setTeacherStats] = useState({
+    myClasses: 0,
+    pendingAttendance: 0,
+    nextClassTime: "",
+    weeklyContents: 0,
+    pendingAssessments: 0,
+    pendingClasses: [] as Array<{ classId: number; className: string; time: string }>,
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Professores não precisam carregar stats globais
-    if (user?.role !== "TEACHER") {
-      loadStats()
+    if (user?.role === "TEACHER") {
+      loadTeacherStats()
     } else {
+      loadStats()
+    }
+  }, [user?.role, user?.id])
+
+  const loadTeacherStats = async () => {
+    try {
+      if (!user?.id) {
+        console.log("[Dashboard] User ID não disponível")
+        return
+      }
+
+      console.log("[Dashboard] Carregando stats para professor:", user.id, user.name)
+
+      // classesApi.list() já filtra automaticamente pelo professor logado no backend
+      const myClasses = await classesApi.list()
+      console.log("[Dashboard] Minhas turmas:", myClasses.length, myClasses.map(c => c.name))
+
+      // Buscar aulas de hoje para verificar frequências pendentes
+      const today = format(new Date(), "yyyy-MM-dd")
+      let pendingCount = 0
+      let nextTime = ""
+      let weeklyContentCount = 0
+      let totalAssessments = 0
+      const pendingClasses: Array<{ classId: number; className: string; time: string }> = []
+
+      const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd")
+      const weekEnd = format(endOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd")
+
+      for (const cls of myClasses) {
+        try {
+          const lessons = await lessonsApi.list(cls.id)
+          console.log(`[Dashboard] Turma ${cls.name}: ${lessons.length} aulas registradas`)
+          
+          // Contar aulas de hoje sem frequência registrada
+          const todaySchedules = cls.schedules?.filter((schedule: any) => {
+            const dayOfWeek = new Date().getDay()
+            const scheduleDay = schedule.weekday === 6 ? 0 : schedule.weekday + 1
+            return scheduleDay === dayOfWeek
+          }) || []
+
+          // Verificar se já tem aula registrada hoje
+          const hasLessonToday = lessons.some(l => l.date === today)
+          
+          if (todaySchedules.length > 0 && !hasLessonToday) {
+            pendingCount += todaySchedules.length
+            
+            // Adicionar turma pendente
+            todaySchedules.forEach((schedule: any) => {
+              const time = schedule.start_time.substring(0, 5)
+              pendingClasses.push({
+                classId: cls.id,
+                className: cls.name,
+                time: time
+              })
+            })
+            
+            // Pegar próximo horário
+            if (!nextTime && todaySchedules[0]?.start_time) {
+              nextTime = todaySchedules[0].start_time.substring(0, 5)
+            }
+          }
+
+          // Contar conteúdos da semana
+          const weeklyLessons = lessons.filter(l => 
+            l.date >= weekStart && l.date <= weekEnd && l.content
+          )
+          weeklyContentCount += weeklyLessons.length
+
+          // Contar avaliações
+          const assessments = await assessmentsApi.list(cls.id)
+          console.log(`[Dashboard] Turma ${cls.name}: ${assessments.length} avaliações`)
+          totalAssessments += assessments.length
+        } catch (error) {
+          console.error(`Erro ao carregar dados da turma ${cls.id}:`, error)
+        }
+      }
+
+      console.log("[Dashboard] Stats finais:", {
+        myClasses: myClasses.length,
+        pendingAttendance: pendingCount,
+        nextClassTime: nextTime,
+        weeklyContents: weeklyContentCount,
+        pendingAssessments: totalAssessments,
+        pendingClasses: pendingClasses
+      })
+
+      setTeacherStats({
+        myClasses: myClasses.length,
+        pendingAttendance: pendingCount,
+        nextClassTime: nextTime,
+        weeklyContents: weeklyContentCount,
+        pendingAssessments: totalAssessments,
+        pendingClasses: pendingClasses,
+      })
+    } catch (error) {
+      console.error("Erro ao carregar estatísticas do professor:", error)
+    } finally {
       setLoading(false)
     }
-  }, [user?.role])
+  }
 
   const loadStats = async () => {
     try {
@@ -328,95 +433,125 @@ export function SectionCards() {
     </>
   )
 
-  const renderTeacherCards = () => (
-    <>
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Minhas Turmas</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            3
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <BookOpen className="size-4" />
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            <BookOpen className="size-4" /> Ativas
-          </div>
-          <div className="text-muted-foreground">
-            Turmas sob sua responsabilidade
-          </div>
-        </CardFooter>
-      </Card>
+  const renderTeacherCards = () => {
+    const handlePendingClick = () => {
+      if (teacherStats.pendingClasses.length > 0) {
+        const firstPending = teacherStats.pendingClasses[0]
+        window.location.href = `/turmas/${firstPending.classId}?tab=chamada`
+      }
+    }
 
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Frequências Hoje</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            4
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <ClipboardCheck className="size-4" />
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            <ClipboardCheck className="size-4" /> Pendentes
-          </div>
-          <div className="text-muted-foreground">
-            Próxima frequência: 14:00
-          </div>
-        </CardFooter>
-      </Card>
+    return (
+      <>
+        <Card className="@container/card hover:shadow-lg transition-shadow cursor-pointer col-span-full md:col-span-1" onClick={() => window.location.href = '/turmas'}>
+          <CardHeader>
+            <CardDescription className="flex items-center gap-2">
+              <BookOpen className="size-4 text-blue-500" />
+              Minhas Turmas
+            </CardDescription>
+            <CardTitle className="text-4xl font-bold tabular-nums @[250px]/card:text-5xl text-blue-600 dark:text-blue-400">
+              {loading ? "..." : teacherStats.myClasses}
+            </CardTitle>
+            <CardAction>
+              <Badge variant="default" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                Gerenciar →
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-2 text-sm">
+            <div className="flex gap-2 font-semibold text-blue-700 dark:text-blue-300">
+              <TrendingUp className="size-5" /> Todas ativas
+            </div>
+            <div className="text-muted-foreground text-base">
+              Clique para gerenciar suas turmas
+            </div>
+          </CardFooter>
+        </Card>
 
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Conteúdo Aplicado</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            12
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <BookOpen className="size-4" />
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            <BookOpen className="size-4" /> Esta semana
-          </div>
-          <div className="text-muted-foreground">
-            Conteúdos registrados
-          </div>
-        </CardFooter>
-      </Card>
-
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Avaliações Pendentes</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            12
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <FileText className="size-4" />
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            <FileText className="size-4" /> Para lançar
-          </div>
-          <div className="text-muted-foreground">Avaliações aguardando</div>
-        </CardFooter>
-      </Card>
-    </>
-  )
+        <Card 
+          className={`@container/card transition-all col-span-full md:col-span-1 ${
+            teacherStats.pendingAttendance > 0 
+              ? 'border-2 border-orange-500 shadow-xl shadow-orange-100 dark:shadow-orange-950 cursor-pointer hover:shadow-2xl' 
+              : 'hover:shadow-lg border-2 border-green-500'
+          }`}
+          onClick={teacherStats.pendingAttendance > 0 ? handlePendingClick : undefined}
+        >
+          <CardHeader>
+            <CardDescription className="flex items-center gap-2">
+              <ClipboardCheck className={`size-4 ${
+                teacherStats.pendingAttendance > 0 ? 'text-orange-500 animate-pulse' : 'text-green-500'
+              }`} />
+              Frequências Hoje
+            </CardDescription>
+            <CardTitle className={`text-4xl font-bold tabular-nums @[250px]/card:text-5xl ${
+              teacherStats.pendingAttendance > 0 
+                ? 'text-orange-600 dark:text-orange-400' 
+                : 'text-green-600 dark:text-green-400'
+            }`}>
+              {loading ? "..." : teacherStats.pendingAttendance}
+            </CardTitle>
+            <CardAction>
+              <Badge 
+                variant={teacherStats.pendingAttendance > 0 ? "destructive" : "default"} 
+                className={teacherStats.pendingAttendance > 0 
+                  ? "bg-orange-500 animate-pulse" 
+                  : "bg-green-100 text-green-700"
+                }
+              >
+                {teacherStats.pendingAttendance > 0 ? "Pendente!" : "✓ Em dia"}
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-2 text-sm">
+            {teacherStats.pendingAttendance > 0 ? (
+              <>
+                <div className="flex gap-2 font-bold text-orange-700 dark:text-orange-300 text-base">
+                  ⏰ Registrar frequência agora
+                </div>
+                <div className="space-y-1 w-full">
+                  {teacherStats.pendingClasses.slice(0, 3).map((pending, idx) => (
+                    <div 
+                      key={idx} 
+                      className="text-muted-foreground font-medium p-2 bg-orange-50 dark:bg-orange-950/30 rounded-md border border-orange-200 dark:border-orange-800"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-orange-900 dark:text-orange-200">
+                          {pending.className}
+                        </span>
+                        <span className="text-orange-700 dark:text-orange-300 font-bold">
+                          {pending.time}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {teacherStats.pendingClasses.length > 3 && (
+                    <div className="text-xs text-muted-foreground text-center pt-1">
+                      +{teacherStats.pendingClasses.length - 3} mais
+                    </div>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground italic pt-1">
+                  Clique no card para registrar
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex gap-2 font-semibold text-green-700 dark:text-green-300 text-base">
+                  <CheckCircle2 className="size-5" /> Tudo registrado!
+                </div>
+                <div className="text-muted-foreground text-base">
+                  {teacherStats.nextClassTime 
+                    ? `Próxima aula às ${teacherStats.nextClassTime}` 
+                    : "Sem aulas agendadas hoje"
+                  }
+                </div>
+              </>
+            )}
+          </CardFooter>
+        </Card>
+      </>
+    )
+  }
 
   const renderCards = () => {
     switch (user?.role) {
@@ -434,7 +569,9 @@ export function SectionCards() {
   }
 
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className={`*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs grid gap-4 ${
+      user?.role === "TEACHER" ? "grid-cols-1 md:grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-4"
+    }`}>
       {renderCards()}
     </div>
   )
