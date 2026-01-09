@@ -19,7 +19,7 @@ async def list_students(
     """
     Listar todos os alunos
     """
-    students = db.query(Student).filter(Student.is_active == True).offset(skip).limit(limit).all()
+    students = db.query(Student).filter(Student.is_active == True).order_by(Student.name).offset(skip).limit(limit).all()
     return students
 
 

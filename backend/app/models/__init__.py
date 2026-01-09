@@ -140,7 +140,7 @@ class Attendance(Base):
     id = Column(Integer, primary_key=True, index=True)
     lesson_id = Column(Integer, ForeignKey("lessons.id"))
     student_id = Column(Integer, ForeignKey("students.id"))
-    present = Column(Boolean, default=False)
+    status = Column(String(20), default="present")  # present, absent, late
     note = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -157,6 +157,7 @@ class Assessment(Base):
     student_id = Column(Integer, ForeignKey("students.id"))
     type = Column(String(100))  # Prova, Trabalho, Participação, etc.
     grade = Column(Float)
+    max_grade = Column(Float, default=10.0)  # Nota máxima desta avaliação
     weight = Column(Float, default=1.0)
     note = Column(Text)
     assessment_date = Column(Date)
@@ -166,3 +167,43 @@ class Assessment(Base):
     # Relationships
     lesson = relationship("Lesson", back_populates="assessments")
     student = relationship("Student")
+
+
+class Announcement(Base):
+    __tablename__ = "announcements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    author_id = Column(Integer, ForeignKey("users.id"))
+    class_id = Column(Integer, ForeignKey("classes.id"), nullable=True)  # Null = aviso geral
+    priority = Column(String(20), default="normal")  # low, normal, high, urgent
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    author = relationship("User")
+    class_ = relationship("Class")
+
+
+class Event(Base):
+    __tablename__ = "events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    event_date = Column(Date, nullable=False)
+    start_time = Column(Time)
+    end_time = Column(Time)
+    location = Column(String(255))
+    class_id = Column(Integer, ForeignKey("classes.id"), nullable=True)  # Null = evento geral
+    created_by = Column(Integer, ForeignKey("users.id"))
+    event_type = Column(String(50))  # aula, prova, reuniao, feriado, etc.
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    creator = relationship("User")
+    class_ = relationship("Class")

@@ -94,29 +94,6 @@ function getNavGroups(userRole?: string) {
     })
   }
 
-  if (hasTeacherAccess) {
-    // Se for apenas professor, mostra Chamada e Conteúdo ao invés de Aulas
-    if (isTeacher && !hasFullAccess && !hasPedagogicalAccess && !hasAdminAccess) {
-      academicItems.push({
-        title: "Chamada",
-        url: "/chamada",
-        icon: ClipboardList,
-      })
-      academicItems.push({
-        title: "Conteúdo",
-        url: "/conteudo",
-        icon: BookOpen,
-      })
-    } else {
-      // Outros roles veem Aulas
-      academicItems.push({
-        title: "Aulas",
-        url: "/aulas",
-        icon: BookOpen,
-      })
-    }
-  }
-
   if (academicItems.length > 0) {
     navGroups.push({
       label: "Gestão Acadêmica",
@@ -126,14 +103,6 @@ function getNavGroups(userRole?: string) {
 
   // Avaliações
   const evaluationItems = []
-
-  if (hasTeacherAccess) {
-    evaluationItems.push({
-      title: "Notas",
-      url: "/notas",
-      icon: ClipboardList,
-    })
-  }
 
   if (hasFullAccess || hasPedagogicalAccess) {
     evaluationItems.push({

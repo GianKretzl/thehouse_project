@@ -43,7 +43,11 @@ export default function StudentsPage() {
     try {
       setLoading(true)
       const data = await studentsApi.list()
-      setStudents(data)
+      // Ordenar alunos alfabeticamente
+      const sortedData = data.sort((a, b) => 
+        a.name.localeCompare(b.name, 'pt-BR')
+      )
+      setStudents(sortedData)
     } catch (error) {
       console.error("Erro ao carregar alunos:", error)
     } finally {

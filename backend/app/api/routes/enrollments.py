@@ -18,10 +18,13 @@ async def list_class_students(
     """
     Listar alunos matriculados em uma turma
     """
-    enrollments = db.query(Enrollment).filter(
+    from sqlalchemy.orm import joinedload
+    enrollments = db.query(Enrollment).options(
+        joinedload(Enrollment.student)
+    ).filter(
         Enrollment.class_id == class_id,
         Enrollment.is_active == True
-    ).all()
+    ).join(Student).order_by(Student.name).all()
     return enrollments
 
 

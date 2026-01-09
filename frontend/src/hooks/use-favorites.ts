@@ -42,10 +42,10 @@ export function useFavorites() {
     try {
       const updated = await productsApi.updateFavorite(favoriteId, { notes })
       setFavorites(favorites.map(f => f.id === favoriteId ? updated : f))
-      toast.success("Notas atualizadas")
-    } catch (error: any) {
-      console.error("Erro ao atualizar notas:", error)
-      toast.error("Erro ao atualizar notas")
+      toast.success("Avaliações atualizadas")
+    } catch (error) {
+      console.error("Erro ao atualizar avaliações:", error)
+      toast.error("Erro ao atualizar avaliações")
     }
   }
 

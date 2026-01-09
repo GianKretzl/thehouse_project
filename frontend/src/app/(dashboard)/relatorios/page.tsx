@@ -166,7 +166,7 @@ export default function ReportsPage() {
               <div>
                 <h3 className="font-medium">Relatório de Desempenho</h3>
                 <p className="text-sm text-muted-foreground">
-                  Notas e avaliações por turma e aluno
+                  Avaliações por turma e aluno
                 </p>
               </div>
             </div>

@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from typing import List
 from datetime import date
 from app.core.database import get_db
 from app.api.dependencies import require_role
-from app.models import User, UserRole, Lesson, Class, Teacher, Attendance
-from app.schemas import LessonCreate, LessonResponse, LessonUpdate, AttendanceCreate, AttendanceResponse
+from app.models import User, UserRole, Lesson, Class, Teacher, Attendance, Student, Enrollment
+from app.schemas import LessonCreate, LessonResponse, LessonUpdate, AttendanceCreate, AttendanceResponse, BulkAttendanceCreate
 
 router = APIRouter()
 
@@ -199,6 +200,78 @@ async def create_bulk_attendances(
     return {"message": f"{len(attendances)} presenças registradas com sucesso"}
 
 
+@router.post("/bulk-attendance", status_code=status.HTTP_201_CREATED)
+async def create_bulk_attendance(
+    attendance_data: BulkAttendanceCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.TEACHER, UserRole.DIRECTOR, UserRole.SECRETARY)),
+):
+    """
+    Criar aula e registrar frequência de múltiplos alunos de uma vez
+    """
+    # Verificar se a turma existe
+    class_obj = db.query(Class).filter(Class.id == attendance_data.class_id).first()
+    if not class_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Turma não encontrada"
+        )
+    
+    # Verificar se já existe uma aula nessa data para essa turma
+    existing_lesson = db.query(Lesson).filter(
+        Lesson.class_id == attendance_data.class_id,
+        Lesson.date == attendance_data.date
+    ).first()
+    
+    if existing_lesson:
+        # Se já existe, vamos atualizar as presenças e as observações
+        lesson = existing_lesson
+        if attendance_data.notes is not None:
+            lesson.notes = attendance_data.notes
+            db.commit()
+        # Deletar presenças antigas
+        db.query(Attendance).filter(Attendance.lesson_id == lesson.id).delete()
+    else:
+        # Criar nova aula
+        lesson = Lesson(
+            class_id=attendance_data.class_id,
+            date=attendance_data.date,
+            notes=attendance_data.notes
+        )
+        db.add(lesson)
+        db.commit()
+        db.refresh(lesson)
+    
+    # Criar registros de presença se não for "sem frequência"
+    if not attendance_data.without_attendance:
+        for att_record in attendance_data.attendances:
+            # Verificar se o aluno está matriculado na turma
+            enrollment = db.query(Enrollment).filter(
+                Enrollment.student_id == att_record.student_id,
+                Enrollment.class_id == attendance_data.class_id,
+                Enrollment.is_active == True
+            ).first()
+            
+            if not enrollment:
+                continue  # Pular se o aluno não está matriculado
+            
+            attendance = Attendance(
+                lesson_id=lesson.id,
+                student_id=att_record.student_id,
+                status=att_record.status.value
+            )
+            db.add(attendance)
+        
+        db.commit()
+    
+    return {
+        "message": "Frequência registrada com sucesso",
+        "lesson_id": lesson.id,
+        "date": lesson.date,
+        "total_students": len(attendance_data.attendances)
+    }
+
+
 @router.get("/{lesson_id}/attendances", response_model=List[AttendanceResponse])
 async def list_attendances(
     lesson_id: int,
@@ -215,6 +288,8 @@ async def list_attendances(
             detail="Aula não encontrada",
         )
     
-    attendances = db.query(Attendance).filter(Attendance.lesson_id == lesson_id).all()
+    attendances = db.query(Attendance).options(
+        joinedload(Attendance.student)
+    ).filter(Attendance.lesson_id == lesson_id).join(Student).order_by(Student.name).all()
     return attendances
 

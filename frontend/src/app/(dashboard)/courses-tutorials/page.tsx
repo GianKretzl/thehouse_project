@@ -132,7 +132,7 @@ const systemTutorials: Course[] = [
   {
     id: 7,
     title: "Como Usar o Portal do Aluno",
-    description: "Aprenda a navegar pelo portal do aluno do The House. Entenda como verificar notas, frequência e conteúdo das aulas.",
+    description: "Aprenda a navegar pelo portal do aluno do The House. Entenda como verificar avaliações, frequência e conteúdo das aulas.",
     duration: "12 min",
     lessons: 1,
     category: "sistema",

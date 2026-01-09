@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from typing import List
 from app.core.database import get_db
 from app.api.dependencies import require_role
-from app.models import User, UserRole, Class, Teacher
+from app.models import User, UserRole, Class, Teacher, Enrollment
 from app.schemas import ClassCreate, ClassResponse, ClassUpdate
 
 router = APIRouter()
@@ -31,9 +32,15 @@ async def list_classes(
     
     classes = query.offset(skip).limit(limit).all()
     
-    # Adicionar nome do professor na resposta
+    # Adicionar nome do professor e contagem de alunos na resposta
     result = []
     for class_obj in classes:
+        # Contar alunos matriculados ativos na turma
+        student_count = db.query(func.count(Enrollment.id)).filter(
+            Enrollment.class_id == class_obj.id,
+            Enrollment.is_active == True
+        ).scalar() or 0
+        
         class_dict = {
             "id": class_obj.id,
             "name": class_obj.name,
@@ -42,6 +49,7 @@ async def list_classes(
             "teacher_id": class_obj.teacher_id,
             "teacher_name": class_obj.teacher.user.name if class_obj.teacher else None,
             "max_capacity": class_obj.max_capacity,
+            "current_students": student_count,
             "start_date": class_obj.start_date,
             "end_date": class_obj.end_date,
             "is_active": class_obj.is_active,
@@ -62,8 +70,12 @@ async def get_class(
     """
     Obter detalhes de uma turma específica
     """
-    class_ = db.query(Class).filter(Class.id == class_id).first()
-    if not class_:
+    class_obj = db.query(Class).options(
+        joinedload(Class.schedules),
+        joinedload(Class.teacher).joinedload(Teacher.user)
+    ).filter(Class.id == class_id).first()
+    
+    if not class_obj:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Turma não encontrada",
@@ -72,13 +84,35 @@ async def get_class(
     # Teacher can only view their own classes
     if current_user.role == UserRole.TEACHER:
         teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
-        if not teacher or class_.teacher_id != teacher.id:
+        if not teacher or class_obj.teacher_id != teacher.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Você não tem permissão para acessar esta turma",
             )
     
-    return class_
+    # Contar alunos matriculados ativos na turma
+    student_count = db.query(func.count(Enrollment.id)).filter(
+        Enrollment.class_id == class_obj.id,
+        Enrollment.is_active == True
+    ).scalar() or 0
+    
+    class_dict = {
+        "id": class_obj.id,
+        "name": class_obj.name,
+        "description": class_obj.description,
+        "level": class_obj.level,
+        "teacher_id": class_obj.teacher_id,
+        "teacher_name": class_obj.teacher.user.name if class_obj.teacher else None,
+        "max_capacity": class_obj.max_capacity,
+        "current_students": student_count,
+        "start_date": class_obj.start_date,
+        "end_date": class_obj.end_date,
+        "is_active": class_obj.is_active,
+        "created_at": class_obj.created_at,
+        "schedules": class_obj.schedules
+    }
+    
+    return class_dict
 
 
 @router.post("/", response_model=ClassResponse, status_code=status.HTTP_201_CREATED)

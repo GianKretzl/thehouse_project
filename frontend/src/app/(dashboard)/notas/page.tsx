@@ -106,7 +106,11 @@ export default function AssessmentsPage() {
         lessonsApi.list(classId),
       ])
       setAssessments(assessmentsData)
-      setStudents(studentsData)
+      // Ordenar alunos alfabeticamente
+      const sortedStudents = studentsData.sort((a, b) => 
+        a.student.name.localeCompare(b.student.name, 'pt-BR')
+      )
+      setStudents(sortedStudents)
       setLessons(lessonsData)
     } catch (error: any) {
       console.error("Erro ao carregar dados:", error)
@@ -227,9 +231,9 @@ export default function AssessmentsPage() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Notas e Avaliações</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Avaliações</h1>
           <p className="text-muted-foreground">
-            Gerencie as avaliações e notas dos alunos
+            Gerencie as avaliações dos alunos
           </p>
         </div>
         <Button 
@@ -282,7 +286,7 @@ export default function AssessmentsPage() {
               <GraduationCap className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">Nenhum aluno matriculado</h3>
               <p className="text-sm text-muted-foreground">
-                Matricule alunos nesta turma antes de lançar notas
+                Matricule alunos nesta turma antes de lançar avaliações
               </p>
             </div>
           ) : lessons.length === 0 ? (

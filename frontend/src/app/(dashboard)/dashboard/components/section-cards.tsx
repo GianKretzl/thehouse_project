@@ -354,7 +354,7 @@ export function SectionCards() {
 
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Chamadas Hoje</CardDescription>
+          <CardDescription>Frequências Hoje</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             4
           </CardTitle>
@@ -369,7 +369,7 @@ export function SectionCards() {
             <ClipboardCheck className="size-4" /> Pendentes
           </div>
           <div className="text-muted-foreground">
-            Próxima chamada: 14:00
+            Próxima frequência: 14:00
           </div>
         </CardFooter>
       </Card>
@@ -398,7 +398,7 @@ export function SectionCards() {
 
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Notas Pendentes</CardDescription>
+          <CardDescription>Avaliações Pendentes</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             12
           </CardTitle>

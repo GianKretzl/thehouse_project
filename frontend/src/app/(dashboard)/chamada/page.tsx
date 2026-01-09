@@ -67,7 +67,11 @@ export default function AttendancePage() {
     try {
       setLoading(true)
       const data = await enrollmentsApi.getClassStudents(classId)
-      setStudents(data)
+      // Ordenar alunos alfabeticamente
+      const sortedData = data.sort((a, b) => 
+        a.student.name.localeCompare(b.student.name, 'pt-BR')
+      )
+      setStudents(sortedData)
       // Resetar presenças
       setAttendances({})
       setLessonId(null)
@@ -119,7 +123,7 @@ export default function AttendancePage() {
       const lesson = await lessonsApi.create({
         class_id: parseInt(selectedClass),
         date: today,
-        content: "Registro de chamada",
+        content: "Registro de frequência",
         notes: ""
       })
 
@@ -127,14 +131,14 @@ export default function AttendancePage() {
       const attendanceData = Object.entries(attendances).map(([studentId, status]) => ({
         lesson_id: lesson.id,
         student_id: parseInt(studentId),
-        present: status === "present" || status === "late",
+        status: status as 'present' | 'absent' | 'late',
         note: status === "late" ? "Atrasado" : status === "absent" ? "Falta" : undefined
       }))
 
       await attendancesApi.bulkCreate(attendanceData)
 
       toast({
-        title: "Chamada salva!",
+        title: "Frequência salva!",
         description: `Presença registrada para ${markedCount} aluno(s)`,
       })
 
@@ -144,7 +148,7 @@ export default function AttendancePage() {
     } catch (error: any) {
       toast({
         title: "Erro",
-        description: error.response?.data?.detail || "Erro ao salvar chamada",
+        description: error.response?.data?.detail || "Erro ao salvar frequência",
         variant: "destructive",
       })
     } finally {
@@ -180,7 +184,7 @@ export default function AttendancePage() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Chamada</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Frequência</h1>
           <p className="text-muted-foreground">
             Registre a presença dos alunos
           </p>
@@ -309,7 +313,7 @@ export default function AttendancePage() {
                     Limpar
                   </Button>
                   <Button onClick={handleSave} disabled={saving}>
-                    {saving ? "Salvando..." : "Salvar Chamada"}
+                    {saving ? "Salvando..." : "Salvar Frequência"}
                   </Button>
                 </div>
               </div>

@@ -168,6 +168,7 @@ class ClassResponse(ClassBase):
     teacher_id: Optional[int] = None
     teacher_name: Optional[str] = None  # Nome do professor
     schedules: List[ScheduleResponse] = []  # Horários da turma
+    current_students: int = 0  # Número atual de alunos matriculados
     is_active: bool
     created_at: datetime
 
@@ -201,9 +202,15 @@ class LessonResponse(LessonBase):
 
 
 # Attendance Schemas
+class AttendanceStatus(str, Enum):
+    PRESENT = "present"
+    ABSENT = "absent"
+    LATE = "late"
+
+
 class AttendanceBase(BaseModel):
     student_id: int
-    present: bool
+    status: AttendanceStatus
     note: Optional[str] = None
 
 
@@ -218,6 +225,19 @@ class AttendanceResponse(AttendanceBase):
 
     class Config:
         from_attributes = True
+
+
+class BulkAttendanceRecord(BaseModel):
+    student_id: int
+    status: AttendanceStatus
+
+
+class BulkAttendanceCreate(BaseModel):
+    class_id: int
+    date: date
+    attendances: List[BulkAttendanceRecord]
+    without_attendance: bool = False
+    notes: Optional[str] = None
 
 
 # Enrollment Schemas
