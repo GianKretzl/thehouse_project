@@ -1,26 +1,30 @@
 """
-Script para popular o banco de dados com dados de teste
-Inclui: Diretor, Pedagogo, Secretário, Professor Tiago, 5 turmas e 25 alunos
+Script COMPLETO para popular o banco de dados com dados de teste
+Inclui: Usuários, Turmas com Horários, Alunos Matriculados, Eventos e Reservas
+Execute: python seed_test_data.py
 """
 import sys
+import os
 from datetime import date, time, datetime, timedelta
 from sqlalchemy.orm import Session
-from app.core.database import SessionLocal, engine
-from app.models import Base, User, UserRole, Teacher, Student, Class, Schedule, Enrollment
+from app.core.database import SessionLocal
+from app.models import User, UserRole, Teacher, Student, Class, Schedule, Enrollment, Event, MaterialReservation
 from app.core.security import get_password_hash
 
 
 def create_test_data():
-    """Cria dados de teste para o sistema"""
+    """Cria dados completos de teste para o sistema"""
     db = SessionLocal()
     
     try:
+        today = date.today()
+        
         print("🚀 Iniciando criação de dados de teste...")
+        print("="*60)
         
         # ==================== USUÁRIOS ====================
         print("\n👥 Criando usuários do sistema...")
         
-        # 1. Diretor
         director = User(
             name="Maria Silva",
             email="maria.silva@thehouse.com.br",
@@ -31,7 +35,6 @@ def create_test_data():
         db.add(director)
         print("✅ Diretor(a): Maria Silva")
         
-        # 2. Coordenador
         coordinator = User(
             name="Carlos Oliveira",
             email="carlos.oliveira@thehouse.com.br",
@@ -42,7 +45,6 @@ def create_test_data():
         db.add(coordinator)
         print("✅ Coordenador(a): Carlos Oliveira")
         
-        # 3. Secretário
         secretary = User(
             name="Ana Costa",
             email="ana.costa@thehouse.com.br",
@@ -53,7 +55,6 @@ def create_test_data():
         db.add(secretary)
         print("✅ Secretário(a): Ana Costa")
         
-        # 4. Professor Tiago
         teacher_user = User(
             name="Tiago Rodrigues",
             email="tiago.rodrigues@thehouse.com.br",
@@ -62,7 +63,7 @@ def create_test_data():
             is_active=True
         )
         db.add(teacher_user)
-        db.flush()  # Obter ID do usuário
+        db.flush()
         
         teacher = Teacher(
             user_id=teacher_user.id,
@@ -77,191 +78,174 @@ def create_test_data():
         db.commit()
         db.refresh(teacher)
         
-        # ==================== TURMAS ====================
-        print("\n📚 Criando turmas de inglês...")
+        # ==================== TURMAS COM HORÁRIOS ====================
+        print("\n📚 Criando turmas de inglês (Kids 🔴 e Adults 🔵)...")
         
-        turmas_info = [
-            {
-                "name": "Beginner A1 - Morning",
-                "level": "Beginner A1",
-                "description": "Turma para iniciantes absolutos em inglês",
-                "weekday": 0,  # Segunda
-                "start_time": time(8, 0),
-                "end_time": time(10, 0),
-                "room": "Sala 101"
-            },
-            {
-                "name": "Elementary A2 - Afternoon",
-                "level": "Elementary A2",
-                "description": "Inglês básico com foco em conversação",
-                "weekday": 1,  # Terça
-                "start_time": time(14, 0),
-                "end_time": time(16, 0),
-                "room": "Sala 102"
-            },
-            {
-                "name": "Pre-Intermediate B1 - Evening",
-                "level": "Pre-Intermediate B1",
-                "description": "Desenvolvimento de habilidades intermediárias",
-                "weekday": 2,  # Quarta
-                "start_time": time(18, 30),
-                "end_time": time(20, 30),
-                "room": "Sala 103"
-            },
-            {
-                "name": "Intermediate B2 - Morning",
-                "level": "Intermediate B2",
-                "description": "Inglês intermediário com foco em fluência",
-                "weekday": 3,  # Quinta
-                "start_time": time(9, 0),
-                "end_time": time(11, 0),
-                "room": "Sala 104"
-            },
-            {
-                "name": "Advanced C1 - Evening",
-                "level": "Advanced C1",
-                "description": "Inglês avançado para proficiência",
-                "weekday": 4,  # Sexta
-                "start_time": time(19, 0),
-                "end_time": time(21, 0),
-                "room": "Sala 105"
-            }
+        # TURMAS KIDS 🔴 (Crianças 7-12 anos) - English Adventure
+        turmas_kids = [
+            {"name": "K1 - English Adventure 1", "level": "Beginner A1", "description": "🔴 Kids - Nível 1 com atividades lúdicas", 
+             "weekday": 0, "start_time": time(8, 0), "end_time": time(9, 30), "room": "Sala Kids 1"},
+            {"name": "K2 - English Adventure 2", "level": "Elementary A2", "description": "🔴 Kids - Nível 2 com jogos educativos", 
+             "weekday": 1, "start_time": time(8, 0), "end_time": time(9, 30), "room": "Sala Kids 1"},
+            {"name": "K3 - English Adventure 3", "level": "Pre-Intermediate B1", "description": "🔴 Kids - Nível 3 intermediário", 
+             "weekday": 2, "start_time": time(14, 0), "end_time": time(15, 30), "room": "Sala Kids 2"},
+            {"name": "K4 - English Adventure 4", "level": "Intermediate B2", "description": "🔴 Kids - Nível 4 avançando", 
+             "weekday": 3, "start_time": time(14, 0), "end_time": time(15, 30), "room": "Sala Kids 2"},
+            {"name": "K5 - English Adventure 5", "level": "Upper-Intermediate B2", "description": "🔴 Kids - Nível 5 fluência infantil", 
+             "weekday": 4, "start_time": time(8, 0), "end_time": time(9, 30), "room": "Sala Kids 3"},
         ]
         
-        classes = []
-        start_date = date.today()
-        end_date = start_date + timedelta(days=180)  # 6 meses
+        # TURMAS ADULTS 🔵 (Adolescentes 13+ e Adultos) - InstaEnglish
+        turmas_adults = [
+            {"name": "A1 - InstaEnglish Starter", "level": "Beginner A1", "description": "🔵 Adults - Iniciantes absolutos", 
+             "weekday": 0, "start_time": time(18, 30), "end_time": time(20, 30), "room": "Sala 101"},
+            {"name": "A2 - InstaEnglish 1", "level": "Elementary A2", "description": "🔵 Adults - Nível básico", 
+             "weekday": 1, "start_time": time(18, 30), "end_time": time(20, 30), "room": "Sala 102"},
+            {"name": "A3 - InstaEnglish 2", "level": "Pre-Intermediate B1", "description": "🔵 Adults - Pré-intermediário", 
+             "weekday": 2, "start_time": time(19, 0), "end_time": time(21, 0), "room": "Sala 103"},
+            {"name": "A4 - InstaEnglish 3", "level": "Intermediate B2", "description": "🔵 Adults - Intermediário", 
+             "weekday": 3, "start_time": time(19, 0), "end_time": time(21, 0), "room": "Sala 104"},
+            {"name": "A5 - InstaEnglish 4", "level": "Advanced C1", "description": "🔵 Adults - Avançado para proficiência", 
+             "weekday": 4, "start_time": time(19, 0), "end_time": time(21, 0), "room": "Sala 105"},
+        ]
         
-        for turma_info in turmas_info:
+        turmas_info = turmas_kids + turmas_adults
+        
+        classes = []
+        weekdays = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
+        
+        for info in turmas_info:
             turma = Class(
-                name=turma_info["name"],
-                description=turma_info["description"],
-                level=turma_info["level"],
-                teacher_id=teacher.id,
-                max_capacity=15,
-                start_date=start_date,
-                end_date=end_date,
-                is_active=True
+                name=info["name"], description=info["description"], level=info["level"],
+                teacher_id=teacher.id, max_capacity=15, start_date=today,
+                end_date=today + timedelta(days=180), is_active=True
             )
             db.add(turma)
             db.flush()
             
-            # Criar horário da turma
             schedule = Schedule(
-                class_id=turma.id,
-                weekday=turma_info["weekday"],
-                start_time=turma_info["start_time"],
-                end_time=turma_info["end_time"],
-                room=turma_info["room"]
+                class_id=turma.id, weekday=info["weekday"],
+                start_time=info["start_time"], end_time=info["end_time"], room=info["room"]
             )
             db.add(schedule)
-            
             classes.append(turma)
             
-            weekdays = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
-            print(f"✅ {turma.name} - {weekdays[turma_info['weekday']]} {turma_info['start_time'].strftime('%H:%M')}-{turma_info['end_time'].strftime('%H:%M')}")
+            print(f"✅ {turma.name}")
+            print(f"   📍 {info['room']} | ⏰ {weekdays[info['weekday']]} {info['start_time'].strftime('%H:%M')}-{info['end_time'].strftime('%H:%M')}")
         
         db.commit()
         
         # ==================== ALUNOS ====================
-        print("\n👨‍🎓 Criando 25 alunos (5 por turma)...")
+        print("\n👨‍🎓 Criando alunos (Kids 🔴 e Adults 🔵)...")
         
-        nomes_alunos = [
-            # Turma 1
-            ["João Pedro Silva", "Maria Eduarda Santos", "Lucas Ferreira", "Ana Clara Costa", "Pedro Henrique Souza"],
-            # Turma 2
-            ["Julia Oliveira", "Gabriel Almeida", "Isabella Rodrigues", "Rafael Lima", "Laura Martins"],
-            # Turma 3
-            ["Matheus Carvalho", "Sophia Ribeiro", "Felipe Gomes", "Valentina Dias", "Bruno Cardoso"],
-            # Turma 4
-            ["Letícia Araujo", "Vinicius Pereira", "Camila Fernandes", "Gustavo Barbosa", "Mariana Castro"],
-            # Turma 5
-            ["Daniel Rocha", "Beatriz Alves", "Arthur Monteiro", "Lorena Correia", "Henrique Teixeira"]
+        # Nomes para turmas KIDS 🔴 (crianças 7-12 anos)
+        nomes_kids = [
+            ["Miguel Santos", "Sofia Oliveira", "Arthur Costa", "Helena Silva", "Davi Ferreira"],
+            ["Alice Martins", "Enzo Pereira", "Laura Souza", "Bernardo Lima", "Valentina Alves"],
+            ["Lorenzo Rodrigues", "Isabella Gomes", "Heitor Barbosa", "Manuela Dias", "Theo Cardoso"],
+            ["Luiza Araujo", "Gabriel Monteiro", "Cecília Castro", "Samuel Teixeira", "Antonella Correia"],
+            ["Pedro Lucas Silva", "Maria Clara Souza", "Matheus Rocha", "Giovanna Alves", "Nicolas Ferreira"],
         ]
         
+        # Nomes para turmas ADULTS 🔵 (adolescentes e adultos 13+)
+        nomes_adults = [
+            ["João Pedro Silva", "Maria Eduarda Santos", "Lucas Ferreira", "Ana Clara Costa", "Pedro Henrique Souza"],
+            ["Julia Oliveira", "Rafael Almeida", "Camila Rodrigues", "Gustavo Lima", "Mariana Martins"],
+            ["Felipe Carvalho", "Sophia Ribeiro", "Vinicius Gomes", "Letícia Dias", "Bruno Cardoso"],
+            ["Beatriz Araujo", "Matheus Pereira", "Carolina Fernandes", "Daniel Barbosa", "Larissa Castro"],
+            ["André Rocha", "Isabela Alves", "Ricardo Monteiro", "Fernanda Correia", "Thiago Teixeira"],
+        ]
+        
+        nomes = nomes_kids + nomes_adults
+        
         for idx, turma in enumerate(classes):
-            print(f"\n  📖 Matriculando alunos na turma: {turma.name}")
+            print(f"\n  📖 {turma.name}")
             
-            for aluno_idx, nome in enumerate(nomes_alunos[idx]):
-                cpf_base = f"{idx}{aluno_idx:02d}00000000"
-                cpf = cpf_base[:11]
+            # Determina se é turma Kids ou Adults e define idade base
+            is_kids = "Kids" in turma.name
+            birth_year_base = 2016 if is_kids else 2002  # Kids: 8-10 anos, Adults: 20-24 anos
+            
+            for aluno_idx, nome in enumerate(nomes[idx]):
+                # Ajusta idade conforme tipo de turma
+                birth_year = birth_year_base - (aluno_idx % 3)
                 
-                # Calcular idade baseada no nível (Beginner = mais jovens, Advanced = mais velhos)
-                base_age = 18 + (idx * 5)
-                birth_year = datetime.now().year - (base_age + aluno_idx)
-                
-                student = Student(
-                    name=nome,
-                    email=f"{nome.lower().replace(' ', '.')}@email.com",
-                    cpf=cpf,
-                    birth_date=date(birth_year, 1 + (aluno_idx % 12), 15),
-                    phone=f"(41) 9{8000 + (idx * 100) + aluno_idx:04d}-{1000 + aluno_idx:04d}",
-                    address=f"Rua Exemplo, {100 + (idx * 10) + aluno_idx} - São José dos Pinhais, PR",
-                    guardian_name=f"Responsável de {nome.split()[0]}",
-                    guardian_phone=f"(41) 9{7000 + (idx * 100) + aluno_idx:04d}-{2000 + aluno_idx:04d}",
+                aluno = Student(
+                    name=nome, cpf=f"{idx}{aluno_idx:02d}00000000"[:11],
+                    birth_date=date(birth_year, (aluno_idx % 12) + 1, (aluno_idx % 28) + 1),
+                    phone=f"(41) 99{idx}{aluno_idx:02d}-{idx*100+aluno_idx:04d}",
+                    guardian_name=f"Responsável de {nome.split()[0]}" if is_kids else None,
+                    guardian_phone=f"(41) 98{idx}{aluno_idx:02d}-{idx*100+aluno_idx:04d}" if is_kids else None,
                     is_active=True
                 )
-                db.add(student)
+                db.add(aluno)
                 db.flush()
                 
-                # Matricular na turma
-                enrollment = Enrollment(
-                    student_id=student.id,
-                    class_id=turma.id,
-                    enrollment_date=start_date - timedelta(days=10),
-                    is_active=True
-                )
-                db.add(enrollment)
-                
-                print(f"    ✅ {nome}")
+                db.add(Enrollment(student_id=aluno.id, class_id=turma.id, enrollment_date=today, is_active=True))
+                age = today.year - birth_year
+                print(f"    • {nome} ({age} anos)")
+        
+        db.commit()
+        
+        # ==================== EVENTOS E RESERVAS ====================
+        print("\n📅 Criando eventos...")
+        
+        eventos = [
+            {"title": "Reunião Pedagógica", "description": "Discussão estratégias", "event_date": today + timedelta(3),
+             "start_time": time(14,0), "end_time": time(16,0), "location": "Sala Reuniões", "event_type": "meeting", "created_by": director.id},
+            {"title": "Workshop Metodologias", "description": "Formação continuada", "event_date": today + timedelta(7),
+             "start_time": time(9,0), "end_time": time(17,0), "location": "Auditório", "event_type": "meeting", "created_by": director.id},
+            {"title": "Período Avaliações", "description": "Semana de provas", "event_date": today + timedelta(14),
+             "event_type": "exam", "created_by": secretary.id},
+            {"title": f"Prova Grammar - {classes[0].name}", "description": "Avaliação gramática", "event_date": today + timedelta(10),
+             "start_time": time(8,0), "end_time": time(10,0), "location": "Sala 101", "class_id": classes[0].id,
+             "event_type": "exam", "created_by": teacher_user.id}
+        ]
+        
+        for e in eventos:
+            db.add(Event(**e))
+            print(f"  ✓ {e['title']}")
+        
+        print("\n📦 Criando reservas...")
+        
+        reservas = [
+            {"material_name": "Projetor Multimídia", "description": "Slides", "reservation_date": today + timedelta(1),
+             "start_time": time(8,0), "end_time": time(10,0), "quantity": 1, "location": "Sala 101",
+             "class_id": classes[0].id, "reserved_by": teacher_user.id, "status": "confirmed"},
+            {"material_name": "Caixa de Som", "description": "Listening", "reservation_date": today + timedelta(3),
+             "start_time": time(14,0), "end_time": time(16,0), "quantity": 1, "location": "Sala 102",
+             "class_id": classes[1].id, "reserved_by": teacher_user.id, "status": "confirmed"},
+            {"material_name": "Kit Flashcards", "description": "Vocabulário", "reservation_date": today + timedelta(5),
+             "start_time": time(18,30), "end_time": time(20,30), "quantity": 2, "location": "Sala 103",
+             "reserved_by": teacher_user.id, "status": "pending"}
+        ]
+        
+        for r in reservas:
+            db.add(MaterialReservation(**r))
+            print(f"  ✓ {r['material_name']}")
         
         db.commit()
         
         # ==================== RESUMO ====================
         print("\n" + "="*60)
-        print("✨ DADOS DE TESTE CRIADOS COM SUCESSO! ✨")
+        print("✨ BANCO DE DADOS POPULADO COM SUCESSO! ✨")
         print("="*60)
         print("\n📊 RESUMO:")
-        print(f"  • 1 Diretor(a): Maria Silva")
-        print(f"  • 1 Pedagogo(a): Carlos Oliveira")
-        print(f"  • 1 Secretário(a): Ana Costa")
-        print(f"  • 1 Professor: Tiago Rodrigues")
-        print(f"  • 5 Turmas de inglês (Beginner ao Advanced)")
-        print(f"  • 25 Alunos (5 por turma)")
-        print(f"  • 5 Horários configurados")
-        print(f"  • 25 Matrículas ativas")
-        
-        print("\n🔑 CREDENCIAIS DE ACESSO:")
-        print("  Todos os usuários têm senha: senha123")
-        print("\n  📧 Diretor(a):")
-        print("     Email: maria.silva@thehouse.com.br")
-        print("\n  📧 Pedagogo(a):")
-        print("     Email: carlos.oliveira@thehouse.com.br")
-        print("\n  📧 Secretário(a):")
-        print("     Email: ana.costa@thehouse.com.br")
-        print("\n  📧 Professor:")
-        print("     Email: tiago.rodrigues@thehouse.com.br")
-        
-        print("\n📚 TURMAS CRIADAS:")
-        for i, turma in enumerate(classes):
-            weekdays = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
-            schedule = turma.schedules[0]
-            print(f"\n  {i+1}. {turma.name}")
-            print(f"     Nível: {turma.level}")
-            print(f"     Horário: {weekdays[schedule.weekday]} {schedule.start_time.strftime('%H:%M')}-{schedule.end_time.strftime('%H:%M')}")
-            print(f"     Sala: {schedule.room}")
-            print(f"     Alunos: {len(turma.enrollments)}")
-        
-        print("\n" + "="*60)
-        print("🎯 Próximos passos:")
-        print("  1. Inicie o backend: uvicorn app.main:app --reload")
-        print("  2. Acesse: http://localhost:8000/api/v1/docs")
-        print("  3. Faça login com qualquer usuário acima")
-        print("  4. Teste as funcionalidades do sistema")
+        print("  👥 4 Usuários (Diretor, Coordenador, Secretário, Professor)")
+        print("  📚 10 Turmas:")
+        print("     🔴 Kids: K1-K5 (English Adventure 1-5)")
+        print("     🔵 Adults: A1-A5 (InstaEnglish Starter-4)")
+        print("  👨‍🎓 50 Alunos matriculados (5 por turma)")
+        print("  📅 4 Eventos + 3 Reservas de material")
+        print("\n🔑 CREDENCIAIS (senha: senha123):")
+        print("  📧 maria.silva@thehouse.com.br      (Diretor)")
+        print("  📧 carlos.oliveira@thehouse.com.br  (Coordenador)")
+        print("  📧 ana.costa@thehouse.com.br        (Secretário)")
+        print("  📧 tiago.rodrigues@thehouse.com.br  (Professor)")
+        print("\n🎯 Inicie: uvicorn app.main:app --reload")
         print("="*60 + "\n")
         
     except Exception as e:
-        print(f"\n❌ Erro ao criar dados: {str(e)}")
+        print(f"\n❌ Erro: {e}")
         db.rollback()
         raise
     finally:
@@ -269,16 +253,10 @@ def create_test_data():
 
 
 if __name__ == "__main__":
-    print("🏫 The House Institute - Seed de Dados de Teste")
+    print("🏫 The House Institute - Seed Completo")
     print("="*60)
-    
-    # Verificar se as tabelas existem
     try:
         create_test_data()
     except Exception as e:
-        print(f"\n❌ Erro: {e}")
-        print("\n💡 Certifique-se de que:")
-        print("  1. O PostgreSQL está rodando")
-        print("  2. As migrações foram aplicadas (alembic upgrade head)")
-        print("  3. O arquivo .env está configurado corretamente")
+        print(f"\n💡 Verifique: PostgreSQL rodando + migrações aplicadas + .env configurado")
         sys.exit(1)
