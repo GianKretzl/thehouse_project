@@ -116,13 +116,13 @@ export default function AccountSettings() {
           {user && (
             <div className="mt-4 flex gap-2">
               <Badge variant="outline">
-                Plano: {user.plan_type.charAt(0).toUpperCase() + user.plan_type.slice(1)}
-              </Badge>
-              <Badge variant={user.is_verified ? "default" : "secondary"}>
-                {user.is_verified ? "✓ Verificado" : "Não Verificado"}
+                {user.role === "DIRECTOR" ? "Diretor(a)" : 
+                 user.role === "COORDINATOR" ? "Coordenador(a)" :
+                 user.role === "SECRETARY" ? "Secretário(a)" : "Professor(a)"}
               </Badge>
               <Badge variant={user.is_active ? "default" : "destructive"}>
                 {user.is_active ? "Ativo" : "Inativo"}
+              </Badge>
               </Badge>
             </div>
           )}
