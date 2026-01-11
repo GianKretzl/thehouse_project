@@ -14,7 +14,7 @@ router = APIRouter()
 @router.get("/stats", response_model=DashboardStats)
 async def get_dashboard_stats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.PEDAGOGUE)),
+    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.COORDINATOR)),
 ):
     """
     Obter estatísticas do dashboard administrativo

@@ -253,7 +253,7 @@ export function SectionCards() {
     </>
   )
 
-  const renderPedagogueCards = () => (
+  const renderCoordinatorCards = () => (
     <>
       <Card className="@container/card">
         <CardHeader>
@@ -557,8 +557,8 @@ export function SectionCards() {
     switch (user?.role) {
       case "DIRECTOR":
         return renderDirectorCards()
-      case "PEDAGOGUE":
-        return renderPedagogueCards()
+      case "COORDINATOR":
+        return renderCoordinatorCards()
       case "SECRETARY":
         return renderSecretaryCards()
       case "TEACHER":

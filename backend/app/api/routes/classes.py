@@ -15,7 +15,7 @@ async def list_classes(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.PEDAGOGUE, UserRole.TEACHER)),
+    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.COORDINATOR, UserRole.TEACHER)),
 ):
     """
     Listar todas as turmas (Admin vê todas, Professor vê apenas as suas)
@@ -65,7 +65,7 @@ async def list_classes(
 async def get_class(
     class_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.PEDAGOGUE, UserRole.TEACHER)),
+    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.COORDINATOR, UserRole.TEACHER)),
 ):
     """
     Obter detalhes de uma turma específica

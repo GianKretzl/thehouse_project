@@ -14,7 +14,7 @@ async def list_students(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.PEDAGOGUE)),
+    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.COORDINATOR)),
 ):
     """
     Listar todos os alunos
@@ -27,7 +27,7 @@ async def list_students(
 async def get_student(
     student_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.PEDAGOGUE, UserRole.TEACHER)),
+    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.COORDINATOR, UserRole.TEACHER)),
 ):
     """
     Obter detalhes de um aluno específico

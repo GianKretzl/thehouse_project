@@ -6,8 +6,8 @@ import enum
 
 
 class UserRole(str, enum.Enum):
-    DIRECTOR = "DIRECTOR"      # Diretor(a) - Nível mais alto
-    PEDAGOGUE = "PEDAGOGUE"    # Pedagogo(a) - Acompanhamento pedagógico
+    DIRECTOR = "DIRECTOR"      # Diretor(a) - Nível mais alto, acesso total
+    COORDINATOR = "COORDINATOR" # Coordenador(a) - Acompanhamento pedagógico
     SECRETARY = "SECRETARY"    # Secretário(a) - Administrativo
     TEACHER = "TEACHER"        # Docente - Registro diário
 

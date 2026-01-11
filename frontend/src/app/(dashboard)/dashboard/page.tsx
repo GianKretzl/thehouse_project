@@ -17,8 +17,8 @@ export default function Page() {
     switch (user?.role) {
       case "DIRECTOR":
         return "Dashboard - Diretor(a)"
-      case "PEDAGOGUE":
-        return "Dashboard - Pedagogo(a)"
+      case "COORDINATOR":
+        return "Dashboard - Coordenador(a)"
       case "SECRETARY":
         return "Dashboard - Secretário(a)"
       case "TEACHER":
@@ -32,7 +32,7 @@ export default function Page() {
     switch (user?.role) {
       case "DIRECTOR":
         return "Visão geral completa da instituição"
-      case "PEDAGOGUE":
+      case "COORDINATOR":
         return "Acompanhamento pedagógico e desempenho dos alunos"
       case "SECRETARY":
         return "Gestão administrativa e cadastros"
@@ -64,7 +64,7 @@ export default function Page() {
           </Suspense>
         )}
         
-        {(user?.role === "DIRECTOR" || user?.role === "SECRETARY" || user?.role === "PEDAGOGUE") && (
+        {(user?.role === "DIRECTOR" || user?.role === "SECRETARY" || user?.role === "COORDINATOR") && (
           <Suspense fallback={<ChartSkeleton />}>
             <ChartAreaInteractive />
           </Suspense>

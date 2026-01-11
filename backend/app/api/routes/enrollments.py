@@ -13,7 +13,7 @@ router = APIRouter()
 async def list_class_students(
     class_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.PEDAGOGUE, UserRole.TEACHER)),
+    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.COORDINATOR, UserRole.TEACHER)),
 ):
     """
     Listar alunos matriculados em uma turma

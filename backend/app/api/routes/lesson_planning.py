@@ -43,8 +43,8 @@ async def create_book(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Criar novo livro (apenas DIRECTOR/PEDAGOGUE)"""
-    if current_user.role not in [UserRole.DIRECTOR, UserRole.PEDAGOGUE]:
+    """Criar novo livro (apenas DIRECTOR/COORDINATOR)"""
+    if current_user.role not in [UserRole.DIRECTOR, UserRole.COORDINATOR]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Apenas diretores e pedagogos podem criar livros"
@@ -77,8 +77,8 @@ async def update_book(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Atualizar livro (apenas DIRECTOR/PEDAGOGUE)"""
-    if current_user.role not in [UserRole.DIRECTOR, UserRole.PEDAGOGUE]:
+    """Atualizar livro (apenas DIRECTOR/COORDINATOR)"""
+    if current_user.role not in [UserRole.DIRECTOR, UserRole.COORDINATOR]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Apenas diretores e pedagogos podem editar livros"
@@ -126,8 +126,8 @@ async def create_unit_content(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Criar conteúdo de unidade (apenas DIRECTOR/PEDAGOGUE)"""
-    if current_user.role not in [UserRole.DIRECTOR, UserRole.PEDAGOGUE]:
+    """Criar conteúdo de unidade (apenas DIRECTOR/COORDINATOR)"""
+    if current_user.role not in [UserRole.DIRECTOR, UserRole.COORDINATOR]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Apenas diretores e pedagogos podem criar conteúdo de unidades"
@@ -205,7 +205,7 @@ async def assign_book_to_class(
     current_user: User = Depends(get_current_user)
 ):
     """Atribuir livro a uma turma"""
-    if current_user.role not in [UserRole.DIRECTOR, UserRole.PEDAGOGUE, UserRole.TEACHER]:
+    if current_user.role not in [UserRole.DIRECTOR, UserRole.COORDINATOR, UserRole.TEACHER]:
         raise HTTPException(status_code=403, detail="Sem permissão")
     
     # Verificar se é professor da turma

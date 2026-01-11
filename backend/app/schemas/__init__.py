@@ -6,7 +6,7 @@ from enum import Enum
 
 class UserRole(str, Enum):
     DIRECTOR = "DIRECTOR"
-    PEDAGOGUE = "PEDAGOGUE"
+    COORDINATOR = "COORDINATOR"
     SECRETARY = "SECRETARY"
     TEACHER = "TEACHER"
 

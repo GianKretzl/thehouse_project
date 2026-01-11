@@ -24,7 +24,7 @@ export interface User {
   email: string;
   name: string;
   is_active: boolean;
-  role: "DIRECTOR" | "PEDAGOGUE" | "SECRETARY" | "TEACHER";
+  role: "DIRECTOR" | "COORDINATOR" | "SECRETARY" | "TEACHER";
   created_at: string;
   avatar?: string | null;
   // Campos compatíveis com o frontend legado

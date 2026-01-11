@@ -397,7 +397,7 @@ export default function CalendarPage() {
     }
   }
 
-  const canCreateEvents = user?.role && ['TEACHER', 'SECRETARY', 'PEDAGOGUE', 'DIRECTOR'].includes(user.role)
+  const canCreateEvents = user?.role && ['TEACHER', 'SECRETARY', 'COORDINATOR', 'DIRECTOR'].includes(user.role)
 
   return (
     <div className="flex flex-col gap-6 p-6">

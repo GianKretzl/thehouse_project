@@ -4,14 +4,18 @@ Sistema completo de gerenciamento educacional para The House Institute, desenvol
 
 ## 🎨 Características
 
-- **Autenticação JWT** com roles (Admin/Professor)
-- **Dashboard Administrativo** completo
-- **Gestão de Professores** e atribuição de turmas
-- **Gestão de Alunos** e matrículas
-- **Gestão de Turmas** com horários
-- **Registro de Chamadas** por aula
-- **Lançamento de Notas** e avaliações
+- **Autenticação JWT** com múltiplas roles (Admin/Director/Coordinator/Secretary/Teacher)
+- **Dashboard em Tempo Real** com estatísticas e gráficos
+- **Gestão Completa de Usuários** (professores, coordenadores, secretários)
+- **Gestão de Alunos** com matrícula e histórico
+- **Gestão de Turmas** com horários e cronogramas
+- **Sistema de Frequência** (registro, edição, consulta por aluno/aula)
+- **Sistema de Avaliações** com notas, validação e visualização por aluno
 - **Controle de Conteúdo** ministrado por aula
+- **Calendário Integrado** com eventos, aulas programadas e reservas
+- **Sistema de Planejamento** pedagógico com 8 unidades por livro
+- **Relatórios e Estatísticas** de desempenho e frequência
+- **Alertas de Baixo Desempenho** (frequência e notas)
 
 ## 🚀 Tecnologias
 
@@ -106,46 +110,125 @@ npm run dev
 
 ### Tabelas Principais
 
-- **users** - Usuários do sistema (Admin/Professor)
-- **professores** - Dados dos professores
-- **alunos** - Dados dos alunos
-- **turmas** - Turmas e suas informações
-- **horarios** - Horários das turmas
-- **matriculas** - Matrículas de alunos em turmas
-- **aulas** - Registro de aulas ministradas
-- **chamadas** - Presença dos alunos
-- **avaliacoes** - Notas e avaliações
+- **users** - Usuários do sistema (Admin/Director/Coordinator/Secretary/Teacher)
+- **teachers** - Dados dos professores
+- **students** - Dados dos alunos
+- **classes** - Turmas e suas informações
+- **schedules** - Horários das turmas (dia da semana e horário)
+- **enrollments** - Matrículas de alunos em turmas
+- **lessons** - Registro de aulas ministradas
+- **attendances** - Presença dos alunos (present/absent/late)
+- **assessments** - Notas e avaliações (com nota máxima e peso)
+- **events** - Eventos institucionais no calendário
+- **announcements** - Avisos e comunicados
+- **material_reservations** - Reservas de materiais/salas
+
+### Tabelas de Planejamento (em desenvolvimento)
+
+- **books** - Livros didáticos (com 8 unidades)
+- **unit_contents** - Conteúdo de cada unidade do livro
+- **class_book_assignments** - Associação turma-livro
+- **lesson_plans** - Planejamento pedagógico detalhado por aula
 
 ## 🔐 Autenticação
 
 O sistema usa JWT (JSON Web Tokens) com múltiplos níveis de acesso:
 
-### Director (Diretor)
-- Gerenciar professores, pedagogos e secretários
-- Gerenciar alunos
-- Criar e atribuir turmas
-- Definir horários
-- Visualizar todos os dados do sistema
-
-### Pedagogue (Pedagogo)
-- Visualizar turmas e professores
-- Acompanhar desempenho dos alunos
-- Gerenciar conteúdo pedagógico
-
-### Secretary (Secretário)
-- Gerenciar matrículas
-- Visualizar informações de alunos
-- Emitir documentos
-
-### Teacher (Professor)
-- Visualizar suas turmas
-- Fazer chamadas
-- Lançar conteúdo das aulas
-- Lançar notas dos alunos
-
 ### Admin (Administrador do Sistema)
 - Acesso total ao sistema
 - Gerenciar todas as funcionalidades
+- Configurações do sistema
+
+### Director (Diretor)
+- **Acesso total ao sistema** (mesmo nível que Admin)
+- **Dashboard Administrativo em Tempo Real**:
+  - Total de alunos ativos vs cadastrados
+  - Total de professores (equipe docente)
+  - Turmas ativas vs total de turmas
+  - Status do sistema (uptime)
+  - Visão geral de todas as estatísticas institucionais
+- **Pode dar aulas** (ter turmas vinculadas)
+- Quando tem turmas: acesso ao dashboard de professor (tempo real)
+- Registro de frequência e conteúdo
+- Lançamento de avaliações e notas
+- Gestão completa de usuários (professores, coordenadores, secretários)
+- Gerenciar alunos e matrículas
+- Criar e atribuir turmas
+- Definir horários e cronogramas
+- Visualizar todos os dados do sistema
+- Acesso a relatórios gerenciais
+- Visualizar frequência e notas de todas as turmas
+
+### Coordinator (Coordenador)
+- **Dashboard Pedagógico em Tempo Real**:
+  - Total de alunos ativos (acompanhamento)
+  - Turmas em andamento (registro de frequência e conteúdo)
+  - Total de professores (equipe)
+  - Alertas de baixo desempenho
+- **Pode dar aulas** (ter turmas vinculadas)
+- Quando tem turmas: acesso ao dashboard de professor (tempo real)
+- Registro de frequência e conteúdo das suas turmas
+- Lançamento de avaliações e notas das suas turmas
+- Visualizar todas as turmas e professores
+- Acompanhar desempenho de todos os alunos
+- Gerenciar conteúdo pedagógico de todas as turmas
+- Visualizar frequência e notas de todas as turmas (somente leitura)
+- Gerar relatórios pedagógicos
+- Alertas de baixo desempenho (frequência < 75% ou notas < 7.0)
+
+### Secretary (Secretário)
+- **Dashboard Administrativo em Tempo Real**:
+  - Total de alunos matriculados
+  - Total de matrículas ativas
+  - Total de turmas disponíveis
+  - Status de ocupação das turmas
+- Gerenciar matrículas (criar, editar, inativar)
+- Gerenciar cadastro completo de alunos
+- Visualizar informações de todas as turmas
+- Consultar frequência e notas de todos os alunos (somente leitura)
+- Emitir relatórios e documentos
+- Gerenciar reservas de materiais
+- Acesso ao calendário institucional
+
+### Teacher (Professor)
+- **Dashboard em Tempo Real** com estatísticas da turma:
+  - Taxa de frequência geral e última aula
+  - Média, maior, menor e mediana de notas
+  - Aulas completadas vs esperadas
+  - Alertas de alunos com baixa frequência (< 75%)
+  - Alertas de alunos com notas baixas (< 7.0)
+  - Atividades recentes
+  - Detalhes por aluno (frequência e desempenho)
+- **Sistema de Frequência**:
+  - Cadastrar frequência (presente/faltou/atrasado)
+  - Editar frequências registradas
+  - Adicionar observações da aula
+  - Consultar por aluno ou por aula
+  - Matriz de frequência aluno × aula
+- **Sistema de Conteúdo**:
+  - Lançar conteúdo ministrado em cada aula
+  - Editar conteúdo de aulas anteriores
+  - Visualizar histórico de conteúdos
+- **Sistema de Avaliações**:
+  - Criar avaliações por tipo (av1, av2, prova, trabalho, etc)
+  - Definir nota máxima por avaliação (até 10.0)
+  - Lançar notas com validação automática
+  - Editar avaliações existentes
+  - Excluir avaliações
+  - Visualização por avaliação ou por aluno
+  - Formatação automática de notas (ex: 14 → 1.4, 2 → 2.0)
+  - Validação em tempo real (máximo 1 casa decimal)
+  - Coluna de somatória total por aluno
+- **Calendário Integrado**:
+  - Visualizar eventos institucionais
+  - Ver aulas programadas (baseadas nos horários)
+  - Ver aulas já registradas (com frequência)
+  - Consultar reservas de materiais
+- **Planejamento Pedagógico** (em desenvolvimento):
+  - Sistema de 8 unidades por livro
+  - Objetivos e conteúdo por aula
+  - Materiais necessários
+  - Método PPP (Presentation, Practice, Production)
 
 ## 📝 Uso
 

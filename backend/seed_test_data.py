@@ -31,16 +31,16 @@ def create_test_data():
         db.add(director)
         print("✅ Diretor(a): Maria Silva")
         
-        # 2. Pedagogo
-        pedagogue = User(
+        # 2. Coordenador
+        coordinator = User(
             name="Carlos Oliveira",
             email="carlos.oliveira@thehouse.com.br",
             hashed_password=get_password_hash("senha123"),
-            role=UserRole.PEDAGOGUE,
+            role=UserRole.COORDINATOR,
             is_active=True
         )
-        db.add(pedagogue)
-        print("✅ Pedagogo(a): Carlos Oliveira")
+        db.add(coordinator)
+        print("✅ Coordenador(a): Carlos Oliveira")
         
         # 3. Secretário
         secretary = User(

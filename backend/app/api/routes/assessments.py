@@ -17,7 +17,7 @@ async def list_assessments(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.PEDAGOGUE, UserRole.TEACHER)),
+    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.COORDINATOR, UserRole.TEACHER)),
 ):
     """
     Listar avaliações com filtros opcionais
@@ -167,7 +167,7 @@ async def delete_assessment(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Você não tem permissão para excluir esta avaliação",
             )
-    elif current_user.role not in [UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.PEDAGOGUE]:
+    elif current_user.role not in [UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.COORDINATOR]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Você não tem permissão para excluir avaliações",
