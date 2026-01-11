@@ -73,8 +73,7 @@ export function SignupForm1({
       clearError()
       
       await register({
-        username: data.username,
-        full_name: data.fullName,
+        name: data.fullName,
         email: data.email,
         password: data.password,
       })
