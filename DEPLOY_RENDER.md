@@ -119,7 +119,7 @@ git push -u origin main
    - **Runtime**: `Node`
    - **Build Command**: 
      ```bash
-     npm install -g pnpm && pnpm install && pnpm build
+     npm install -g pnpm && pnpm install --no-frozen-lockfile && pnpm build
      ```
    - **Start Command**: 
      ```bash
@@ -226,6 +226,10 @@ python seed_test_data.py
 ### **Erro: "pydantic-core compilation failed"**
 - Atualizado: requirements.txt usa versões com wheels pré-compilados
 - Python 3.13 totalmente compatível
+
+### **Erro: "Cannot install with frozen-lockfile" (Frontend)**
+- Build command atualizado: usa `pnpm install --no-frozen-lockfile`
+- Se já criou o serviço: Settings → Build Command → Adicionar `--no-frozen-lockfile`
 
 ### **Erro 502 Bad Gateway**
 - Backend ainda iniciando (aguardar 1-2 minutos)
