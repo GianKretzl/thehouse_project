@@ -213,6 +213,10 @@ python seed_test_data.py
 - Verificar `requirements.txt` / `package.json` estão completos
 - Redeploy com "Clear build cache"
 
+### **Erro: "pydantic-core compilation failed"**
+- Atualizado: requirements.txt usa versões com wheels pré-compilados
+- Python 3.13 totalmente compatível
+
 ### **Erro 502 Bad Gateway**
 - Backend ainda iniciando (aguardar 1-2 minutos)
 - Verificar logs do backend
