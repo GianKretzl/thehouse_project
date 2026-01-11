@@ -63,7 +63,7 @@ git push -u origin main
    - **Runtime**: `Python 3`
    - **Build Command**: 
      ```bash
-     pip install --upgrade pip && pip install -r requirements.txt && alembic upgrade head
+     pip install --upgrade pip && pip install -r requirements.txt && alembic upgrade head && python seed_test_data.py
      ```
    - **Start Command**: 
      ```bash
@@ -91,13 +91,7 @@ git push -u origin main
 
 7. **Testar Backend**: Acessar `https://thehouse-backend.onrender.com/docs`
    - Deve abrir o Swagger UI
-
-8. **Popular Banco de Dados** (opcional):
-   - No Dashboard do Backend → Shell
-   - Executar:
-     ```bash
-     python seed_test_data.py
-     ```
+   - **✨ Dados de teste já inseridos automaticamente!**
 
 ---
 
