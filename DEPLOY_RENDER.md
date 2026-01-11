@@ -70,19 +70,29 @@ git push -u origin main
      uvicorn app.main:app --host 0.0.0.0 --port $PORT
      ```
    - **Plan**: `Free`
+   - **⚠️ IMPORTANTE**: Clique em **"Advanced"** antes de criar!
 
-4. **Environment Variables** (clique em "Advanced"):
+4. **Environment Variables** ⚡ **CONFIGURE ANTES DE CRIAR O SERVIÇO**:
+   
+   Clique em **"Advanced"** e adicione as variáveis:
+   
    ```
-   DATABASE_URL = postgresql://thehouse_user:abc123...@dpg-xyz/thehouse_institute
-   SECRET_KEY = gere-uma-chave-secreta-aleatoria-min-32-caracteres-abc123xyz
+   DATABASE_URL = postgresql://thehouse_user:SENHA_AQUI@dpg-XXXXX/thehouse_institute
+   ```
+   ☝️ Cole a **Internal Database URL** copiada na Etapa 2 (linha 48)
+   
+   ```
+   SECRET_KEY = COLE_A_CHAVE_GERADA_AQUI
+   ```
+   ☝️ Gere executando no seu terminal local:
+   ```bash
+   python -c "import secrets; print(secrets.token_urlsafe(32))"
+   ```
+   
+   ```
    PROJECT_NAME = The House Platform
    DEBUG = False
    BACKEND_CORS_ORIGINS = ["https://thehouse-frontend.onrender.com"]
-   ```
-
-   **💡 Gerar SECRET_KEY**: Use Python
-   ```bash
-   python -c "import secrets; print(secrets.token_urlsafe(32))"
    ```
 
 5. **Create Web Service** ✅
@@ -226,8 +236,14 @@ python seed_test_data.py
 - Backend precisa reiniciar após mudança
 
 ### **Database Connection Failed**
-- Verificar `DATABASE_URL` está correta
+- Verificar `DATABASE_URL` está correta (copie da aba "Connect" do database)
+- Usar **Internal Database URL**, não External
 - Database pode estar em sleep (plano free)
+
+### **Validation Error: DATABASE_URL/SECRET_KEY required**
+- ⚠️ **Configure as Environment Variables ANTES de criar o serviço**
+- No Render, clique "Advanced" → Adicione todas as variáveis → Então "Create Web Service"
+- Se já criou sem as variáveis: Dashboard → Environment → Add Environment Variables → Save
 
 ### **Frontend não conecta ao Backend**
 - Verificar `NEXT_PUBLIC_API_URL` no frontend
