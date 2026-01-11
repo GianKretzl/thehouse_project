@@ -108,27 +108,27 @@ export default function AccountSettings() {
 
   return (
     <div className="space-y-6 px-4 lg:px-6">
-        <div>
-          <h1 className="text-3xl font-bold">Configurações da Conta</h1>
-          <p className="text-muted-foreground">
-            Gerencie as configurações e preferências da sua conta.
-          </p>
-          {user && (
-            <div className="mt-4 flex gap-2">
-              <Badge variant="outline">
-                {user.role === "DIRECTOR" ? "Diretor(a)" : 
-                 user.role === "COORDINATOR" ? "Coordenador(a)" :
-                 user.role === "SECRETARY" ? "Secretário(a)" : "Professor(a)"}
-              </Badge>
-              <Badge variant={user.is_active ? "default" : "destructive"}>
-                {user.is_active ? "Ativo" : "Inativo"}
-              </Badge>
-            </div>
-          )}
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Configurações da Conta</h1>
+        <p className="text-muted-foreground">
+          Gerencie as configurações e preferências da sua conta.
+        </p>
+        {user && (
+          <div className="mt-4 flex gap-2">
+            <Badge variant="outline">
+              {user.role === "DIRECTOR" ? "Diretor(a)" : 
+               user.role === "COORDINATOR" ? "Coordenador(a)" :
+               user.role === "SECRETARY" ? "Secretário(a)" : "Professor(a)"}
+            </Badge>
+            <Badge variant={user.is_active ? "default" : "destructive"}>
+              {user.is_active ? "Ativo" : "Inativo"}
+            </Badge>
+          </div>
+        )}
+      </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Informações Pessoais</CardTitle>
@@ -236,6 +236,6 @@ export default function AccountSettings() {
             </div>
           </form>
         </Form>
-      </div>
+    </div>
   )
 }
