@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.routes import auth, admin, teachers, students, classes, lessons, assessments, enrollments, activities
+from app.api.routes import auth, admin, teachers, students, classes, lessons, assessments, enrollments, activities, calendar, lesson_planning
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -28,6 +28,8 @@ app.include_router(lessons.router, prefix=f"{settings.API_V1_PREFIX}/lessons", t
 app.include_router(assessments.router, prefix=f"{settings.API_V1_PREFIX}/assessments", tags=["assessments"])
 app.include_router(enrollments.router, prefix=f"{settings.API_V1_PREFIX}/enrollments", tags=["enrollments"])
 app.include_router(activities.router, prefix=f"{settings.API_V1_PREFIX}/activities", tags=["activities"])
+app.include_router(calendar.router, prefix=f"{settings.API_V1_PREFIX}/calendar", tags=["calendar"])
+app.include_router(lesson_planning.router, prefix=f"{settings.API_V1_PREFIX}/planning", tags=["planning"])
 
 
 @app.get("/")

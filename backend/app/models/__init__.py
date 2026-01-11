@@ -207,3 +207,26 @@ class Event(Base):
     # Relationships
     creator = relationship("User")
     class_ = relationship("Class")
+
+
+class MaterialReservation(Base):
+    __tablename__ = "material_reservations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    material_name = Column(String(255), nullable=False)
+    description = Column(Text)
+    reservation_date = Column(Date, nullable=False)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
+    quantity = Column(Integer, default=1)
+    location = Column(String(255))  # Onde será usado
+    class_id = Column(Integer, ForeignKey("classes.id"), nullable=True)
+    reserved_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    status = Column(String(20), default="pending")  # pending, confirmed, cancelled
+    notes = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    reserver = relationship("User")
+    class_ = relationship("Class")

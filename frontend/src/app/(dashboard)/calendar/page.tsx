@@ -1,10 +1,7 @@
-import { Calendar } from "./components/calendar"
-import { events, eventDates } from "./data"
+"use client"
 
-export default function CalendarPage() {
-  return (
-    <div className="px-4 lg:px-6">
-      <Calendar events={events} eventDates={eventDates} />
-    </div>
-  )
+import CalendarPage from "./components/calendar-functional"
+
+export default function Page() {
+  return <CalendarPage />
 }

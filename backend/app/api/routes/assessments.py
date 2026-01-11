@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.core.database import get_db
-from app.api.dependencies import require_role
+from app.api.dependencies import require_role, get_current_user
 from app.models import User, UserRole, Assessment, Lesson, Teacher, Class
 from app.schemas import AssessmentCreate, AssessmentResponse, AssessmentUpdate
 
@@ -121,16 +121,56 @@ async def update_assessment(
 async def delete_assessment(
     assessment_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(UserRole.DIRECTOR, UserRole.SECRETARY)),
+    current_user: User = Depends(get_current_user),
 ):
     """
-    Deletar uma avaliação (apenas DIRECTOR e SECRETARY)
+    Deletar uma avaliação
+    - DIRECTOR e SECRETARY: podem deletar qualquer avaliação
+    - TEACHER: pode deletar avaliações de suas próprias turmas
     """
     assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
     if not assessment:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Avaliação não encontrada",
+        )
+    
+    # Buscar a lição para verificar a turma
+    lesson = db.query(Lesson).filter(Lesson.id == assessment.lesson_id).first()
+    if not lesson:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Aula não encontrada",
+        )
+    
+    # Buscar a turma
+    class_ = db.query(Class).filter(Class.id == lesson.class_id).first()
+    if not class_:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Turma não encontrada",
+        )
+    
+    # Verificar permissões
+    if current_user.role == UserRole.TEACHER:
+        # Buscar o registro de Teacher associado ao user
+        teacher = db.query(Teacher).filter(Teacher.user_id == current_user.id).first()
+        if not teacher:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Registro de professor não encontrado",
+            )
+        
+        # Verificar se o professor é o dono da turma
+        if class_.teacher_id != teacher.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Você não tem permissão para excluir esta avaliação",
+            )
+    elif current_user.role not in [UserRole.DIRECTOR, UserRole.SECRETARY, UserRole.PEDAGOGUE]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você não tem permissão para excluir avaliações",
         )
     
     db.delete(assessment)

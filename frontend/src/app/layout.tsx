@@ -10,6 +10,10 @@ import { inter } from "@/lib/fonts";
 export const metadata: Metadata = {
   title: "The House Platform",
   description: "Sistema de Gestão Educacional - The House Institute",
+  icons: {
+    icon: "/thehouse-icon.png",
+    apple: "/thehouse-icon.png",
+  },
 };
 
 export default function RootLayout({

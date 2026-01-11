@@ -266,6 +266,7 @@ class AssessmentBase(BaseModel):
     student_id: int
     type: str
     grade: float = Field(..., ge=0, le=10)
+    max_grade: float = Field(default=10.0, ge=0, le=10)
     weight: float = Field(default=1.0, ge=0)
     note: Optional[str] = None
     assessment_date: date
@@ -278,6 +279,7 @@ class AssessmentCreate(AssessmentBase):
 class AssessmentUpdate(BaseModel):
     type: Optional[str] = None
     grade: Optional[float] = Field(None, ge=0, le=10)
+    max_grade: Optional[float] = Field(None, ge=0, le=10)
     weight: Optional[float] = Field(None, ge=0)
     note: Optional[str] = None
     assessment_date: Optional[date] = None

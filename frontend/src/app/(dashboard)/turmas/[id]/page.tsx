@@ -69,6 +69,7 @@ export default function ClassDetailPage() {
   const [assessmentType, setAssessmentType] = useState<string>("")
   const [maxGrade, setMaxGrade] = useState<string>("")
   const [assessmentGrades, setAssessmentGrades] = useState<Record<string, string>>({})
+  const [assessmentGradesTouched, setAssessmentGradesTouched] = useState<Record<string, boolean>>({})
   const [savingAssessment, setSavingAssessment] = useState(false)
   const [assessments, setAssessments] = useState<any[]>([])
   const [loadingAssessments, setLoadingAssessments] = useState(false)
@@ -97,14 +98,33 @@ export default function ClassDetailPage() {
     loadClassData()
     loadEnrolledStudents()
     loadRegisteredLessons()
-    loadAssessments()
   }, [classId])
+
+  useEffect(() => {
+    if (enrolledStudents.length > 0) {
+      loadAssessments()
+    }
+  }, [enrolledStudents])
 
   useEffect(() => {
     if (enrolledStudents.length > 0 && registeredLessons.length > 0) {
       loadDashboardStats()
     }
   }, [enrolledStudents, registeredLessons, assessments])
+
+  // Atualizar matriz de avaliações por aluno sempre que mudar
+  useEffect(() => {
+    if (enrolledStudents.length > 0 && assessments.length > 0) {
+      const matrix = enrolledStudents.map(student => {
+        const studentAssessments = assessments.filter((a: any) => a.student_id === student.id)
+        return {
+          student,
+          assessments: studentAssessments
+        }
+      })
+      setStudentAssessmentMatrix(matrix)
+    }
+  }, [assessments, enrolledStudents])
 
   const loadClassData = async () => {
     try {
@@ -286,6 +306,45 @@ export default function ClassDetailPage() {
     return timeString.substring(0, 5)
   }
 
+  // Função para formatar nota ao sair do campo: 2 -> 2.0, 14 -> 1.4
+  const formatGradeOnBlur = (value: string): string => {
+    if (!value || value.trim() === '') return ''
+    
+    // Se já tem ponto, apenas garante 1 casa decimal
+    if (value.includes('.')) {
+      const [intPart, decPart] = value.split('.')
+      return `${intPart}.${decPart.substring(0, 1)}`
+    }
+    
+    // Remove tudo exceto números
+    const cleanValue = value.replace(/[^0-9]/g, '')
+    if (cleanValue === '') return ''
+    
+    // Se tem apenas 1 dígito, adiciona .0
+    if (cleanValue.length === 1) {
+      return `${cleanValue}.0`
+    }
+    
+    // Se tem 2 ou mais dígitos, coloca ponto entre primeiro e segundo
+    const firstDigit = cleanValue[0]
+    const secondDigit = cleanValue[1]
+    return `${firstDigit}.${secondDigit}`
+  }
+  
+  // Validar input durante digitação (permitir números e ponto, máximo 1 casa decimal)
+  const isValidGradeInput = (value: string): boolean => {
+    if (value === '') return true
+    // Permite apenas números e no máximo um ponto
+    if (!/^[0-9.]*$/.test(value)) return false
+    // Se tem ponto, verifica se tem no máximo 1 casa decimal
+    if (value.includes('.')) {
+      const parts = value.split('.')
+      if (parts.length > 2) return false // Mais de um ponto
+      if (parts[1] && parts[1].length > 1) return false // Mais de 1 casa decimal
+    }
+    return true
+  }
+
   const handleSaveContent = async () => {
     if (!selectedContentLesson || !contentText.trim()) {
       toast({
@@ -357,6 +416,39 @@ export default function ClassDetailPage() {
       return
     }
 
+    // Verificar se há notas inválidas (maiores que o máximo)
+    for (const [studentId, gradeStr] of Object.entries(assessmentGrades)) {
+      if (!gradeStr.trim()) continue
+      
+      const grade = parseFloat(gradeStr)
+      if (isNaN(grade)) {
+        toast({
+          title: "Erro",
+          description: "Há notas inválidas. Verifique os valores digitados.",
+          variant: "destructive"
+        })
+        return
+      }
+      
+      if (grade > maxGradeNum) {
+        toast({
+          title: "Erro",
+          description: `Nota ${grade.toFixed(1)} excede a nota máxima da atividade (${maxGradeNum.toFixed(1)})`,
+          variant: "destructive"
+        })
+        return
+      }
+      
+      if (grade > 10.0) {
+        toast({
+          title: "Erro",
+          description: "Nota não pode exceder 10.0",
+          variant: "destructive"
+        })
+        return
+      }
+    }
+
     try {
       setSavingAssessment(true)
       
@@ -366,44 +458,34 @@ export default function ClassDetailPage() {
       for (const [studentId, gradeStr] of Object.entries(assessmentGrades)) {
         if (!gradeStr.trim()) continue
         
-        let grade = parseFloat(gradeStr.replace(',', '.'))
+        const grade = parseFloat(gradeStr)
         if (isNaN(grade)) continue
         
-        // Validação: converte 92 para 9.2
-        if (grade > 10) {
-          grade = grade / 10
-        }
+        // Verificar se já existe uma avaliação deste tipo para este aluno nesta aula
+        const existingAssessment = assessments.find(
+          a => a.lesson_id === selectedAssessmentLesson.id && 
+               a.student_id === parseInt(studentId) && 
+               a.type === assessmentType
+        )
         
-        // Validação: não pode exceder max_grade
-        if (grade > maxGradeNum) {
-          toast({
-            title: "Erro",
-            description: `Nota ${grade} excede a nota máxima ${maxGradeNum}`,
-            variant: "destructive"
+        if (existingAssessment) {
+          // Atualizar avaliação existente
+          await assessmentsApi.update(existingAssessment.id, {
+            grade: grade,
+            max_grade: maxGradeNum
           })
-          setSavingAssessment(false)
-          return
-        }
-        
-        if (grade > 10.0) {
-          toast({
-            title: "Erro",
-            description: "Nota não pode exceder 10.0",
-            variant: "destructive"
+        } else {
+          // Criar nova avaliação
+          await assessmentsApi.create({
+            lesson_id: selectedAssessmentLesson.id,
+            student_id: parseInt(studentId),
+            type: assessmentType,
+            grade: grade,
+            max_grade: maxGradeNum,
+            weight: 1.0,
+            assessment_date: today
           })
-          setSavingAssessment(false)
-          return
         }
-        
-        await assessmentsApi.create({
-          lesson_id: selectedAssessmentLesson.id,
-          student_id: parseInt(studentId),
-          type: assessmentType,
-          grade: grade,
-          max_grade: maxGradeNum,
-          weight: 1.0,
-          assessment_date: today
-        })
       }
 
       toast({
@@ -419,6 +501,7 @@ export default function ClassDetailPage() {
       setAssessmentType("")
       setMaxGrade("")
       setAssessmentGrades({})
+      setAssessmentGradesTouched({})
     } catch (error: any) {
       console.error("Erro ao salvar avaliações:", error)
       toast({
@@ -436,21 +519,75 @@ export default function ClassDetailPage() {
       setLoadingAssessments(true)
       const data = await assessmentsApi.list(parseInt(classId))
       setAssessments(data)
-      
-      // Construir matriz aluno x avaliação
-      const matrix = enrolledStudents.map(student => {
-        const studentAssessments = data.filter((a: any) => a.student_id === student.id)
-        return {
-          student,
-          assessments: studentAssessments
-        }
-      })
-      setStudentAssessmentMatrix(matrix)
     } catch (error) {
       console.error("Erro ao carregar avaliações:", error)
     } finally {
       setLoadingAssessments(false)
     }
+  }
+
+  const handleDeleteAssessment = async (lessonId: number, type: string) => {
+    if (!confirm(`Deseja realmente excluir a avaliação "${type}"? Todas as notas dos alunos serão removidas.`)) {
+      return
+    }
+
+    try {
+      // Buscar todas as avaliações deste tipo nesta aula
+      const assessmentsToDelete = assessments.filter(
+        a => a.lesson_id === lessonId && a.type === type
+      )
+
+      // Excluir cada uma
+      for (const assessment of assessmentsToDelete) {
+        await assessmentsApi.delete(assessment.id)
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Avaliação excluída com sucesso!"
+      })
+
+      // Recarregar avaliações
+      await loadAssessments()
+    } catch (error: any) {
+      console.error("Erro ao excluir avaliação:", error)
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível excluir a avaliação",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleEditAssessment = async (lessonId: number, type: string, maxGrade: number) => {
+    // Buscar a aula
+    const lesson = registeredLessons.find(l => l.id === lessonId)
+    if (!lesson) {
+      toast({
+        title: "Erro",
+        description: "Aula não encontrada",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Buscar todas as avaliações deste tipo nesta aula
+    const assessmentsToEdit = assessments.filter(
+      a => a.lesson_id === lessonId && a.type === type && a.max_grade === maxGrade
+    )
+
+    // Preencher o formulário
+    setSelectedAssessmentLesson(lesson)
+    setAssessmentType(type)
+    setMaxGrade(maxGrade.toFixed(1))
+    
+    // Preencher as notas dos alunos
+    const grades: Record<string, string> = {}
+    assessmentsToEdit.forEach(a => {
+      grades[a.student_id.toString()] = a.grade.toFixed(1)
+    })
+    setAssessmentGrades(grades)
+    setAssessmentGradesTouched({})
   }
 
   const loadDashboardStats = async () => {
@@ -493,22 +630,33 @@ export default function ClassDetailPage() {
         }
       }
       
-      // 3. Calcular média de notas
-      const grades = assessments.map((a: any) => a.grade)
-      const averageGrade = grades.length > 0 ? parseFloat((grades.reduce((a: number, b: number) => a + b, 0) / grades.length).toFixed(1)) : 0
-      const maxGrade = grades.length > 0 ? Math.max(...grades) : 0
-      const minGrade = grades.length > 0 ? Math.min(...grades) : 0
-      const sortedGrades = [...grades].sort((a, b) => a - b)
-      const medianGrade = sortedGrades.length > 0 ? sortedGrades[Math.floor(sortedGrades.length / 2)] : 0
+      // 3. Calcular estatísticas de notas por aluno primeiro
+      const studentAverages: number[] = []
+      for (const student of enrolledStudents) {
+        const studentGrades = assessments.filter((a: any) => a.student_id === student.id).map((a: any) => a.grade)
+        if (studentGrades.length > 0) {
+          const avgGrade = studentGrades.reduce((a: number, b: number) => a + b, 0) / studentGrades.length
+          studentAverages.push(avgGrade)
+        }
+      }
       
-      // 4. Calcular estatísticas por aluno
+      // Calcular estatísticas gerais baseadas nas médias dos alunos
+      const averageGrade = studentAverages.length > 0 ? parseFloat((studentAverages.reduce((a: number, b: number) => a + b, 0) / studentAverages.length).toFixed(1)) : 0
+      const maxGrade = studentAverages.length > 0 ? parseFloat(Math.max(...studentAverages).toFixed(1)) : 0
+      const minGrade = studentAverages.length > 0 ? parseFloat(Math.min(...studentAverages).toFixed(1)) : 0
+      const sortedAverages = [...studentAverages].sort((a, b) => a - b)
+      const medianGrade = sortedAverages.length > 0 ? parseFloat(sortedAverages[Math.floor(sortedAverages.length / 2)].toFixed(1)) : 0
+      
+      // 4. Calcular estatísticas por aluno (tempo real)
       const studentDetails: Record<string, any> = {}
       for (const student of enrolledStudents) {
         const studentId = student.id
         const attendance = studentAttendanceRates[studentId] || { present: 0, total: 0 }
         const attendanceRate = attendance.total > 0 ? Math.round((attendance.present / attendance.total) * 100) : 0
         
-        const studentGrades = assessments.filter((a: any) => a.student_id === studentId).map((a: any) => a.grade)
+        // Buscar notas do aluno em tempo real
+        const studentAssessments = assessments.filter((a: any) => a.student_id === studentId)
+        const studentGrades = studentAssessments.map((a: any) => a.grade)
         const avgGrade = studentGrades.length > 0 ? parseFloat((studentGrades.reduce((a: number, b: number) => a + b, 0) / studentGrades.length).toFixed(1)) : 0
         
         studentDetails[studentId] = {
@@ -516,7 +664,8 @@ export default function ClassDetailPage() {
           name: student.name,
           attendance: attendanceRate,
           performance: avgGrade,
-          activities: studentGrades.length
+          activities: studentGrades.length,
+          assessments: studentAssessments // Incluir assessments completos para referência
         }
       }
       
@@ -1782,6 +1931,7 @@ export default function ClassDetailPage() {
                       setAssessmentType("")
                       setMaxGrade("")
                       setAssessmentGrades({})
+                      setAssessmentGradesTouched({})
                     }}
                   >
                     <X className="h-4 w-4" />
@@ -1790,15 +1940,28 @@ export default function ClassDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="p-3 bg-muted rounded-lg text-sm">
-                    <div className="flex justify-between mb-2">
-                      <span className="font-medium">Data da Aula:</span>
-                      <span>{format(parseLocalDate(selectedAssessmentLesson.date), "dd/MM/yyyy", { locale: ptBR })}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium">Presentes:</span>
-                      <span>{selectedAssessmentLesson.presentCount}</span>
-                    </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Aula: *</label>
+                    <Select
+                      value={selectedAssessmentLesson.id.toString()}
+                      onValueChange={(value) => {
+                        const lesson = registeredLessons.find(l => l.id === parseInt(value))
+                        if (lesson) {
+                          setSelectedAssessmentLesson(lesson)
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {registeredLessons.map(lesson => (
+                          <SelectItem key={lesson.id} value={lesson.id.toString()}>
+                            {format(parseLocalDate(lesson.date), "dd/MM/yyyy", { locale: ptBR })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -1819,11 +1982,25 @@ export default function ClassDetailPage() {
                           type="text"
                           className="flex-1 p-2 border rounded-md"
                           value={maxGrade}
-                          onChange={(e) => setMaxGrade(e.target.value)}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            if (isValidGradeInput(value)) {
+                              setMaxGrade(value)
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const formatted = formatGradeOnBlur(e.target.value)
+                            setMaxGrade(formatted)
+                          }}
                         />
                         <div className="text-sm text-muted-foreground whitespace-nowrap">
-                          {maxGrade && !isNaN(parseFloat(maxGrade.replace(',', '.'))) ? (
-                            <span>Disponível: {(10 - parseFloat(maxGrade.replace(',', '.'))).toFixed(1)} pts</span>
+                          {maxGrade && !isNaN(parseFloat(maxGrade)) ? (
+                            <span className={cn(
+                              parseFloat(maxGrade) > 10 ? 'text-red-500' : '',
+                              parseFloat(maxGrade) < 0 ? 'text-red-500' : ''
+                            )}>
+                              Disponível: {Math.max(0, 10 - parseFloat(maxGrade)).toFixed(1)} pts
+                            </span>
                           ) : (
                             <span>Disponível: 10.0 pts</span>
                           )}
@@ -1837,46 +2014,60 @@ export default function ClassDetailPage() {
                     <div className="border rounded-md p-4 space-y-3 max-h-[400px] overflow-y-auto">
                       {enrolledStudents.map((student) => {
                         const gradeStr = assessmentGrades[student.id] || ""
-                        let grade = gradeStr.trim() ? parseFloat(gradeStr.replace(',', '.')) : null
+                        const grade = gradeStr.trim() ? parseFloat(gradeStr) : null
+                        const isTouched = assessmentGradesTouched[student.id] || false
                         
-                        // Converte 92 para 9.2
-                        if (grade && grade > 10) {
-                          grade = grade / 10
-                        }
-                        
-                        const maxGradeNum = maxGrade ? parseFloat(maxGrade.replace(',', '.')) : 10
-                        const hasError = grade !== null && !isNaN(grade) && (grade > maxGradeNum || grade > 10)
+                        const maxGradeNum = maxGrade ? parseFloat(maxGrade) : 10
+                        const hasError = isTouched && grade !== null && !isNaN(grade) && (grade > maxGradeNum || grade > 10)
                         
                         return (
                           <div key={student.id}>
-                            {hasError && (
-                              <div className="text-xs text-red-500 mb-1">
-                                Nota maior que a máxima
-                              </div>
-                            )}
                             <div className="flex items-center justify-between gap-4">
                               <span className="text-sm font-medium flex-1">{student.name}</span>
-                              <input
-                                type="text"
-                                className={cn(
-                                  "w-24 p-2 border rounded-md text-center",
-                                  hasError && "border-red-500 bg-red-50 focus:ring-red-500"
+                              <div className="flex flex-col items-end gap-1">
+                                <input
+                                  type="text"
+                                  className={cn(
+                                    "w-24 p-2 border rounded-md text-center",
+                                    hasError && "border-red-500 bg-red-50 focus:ring-red-500"
+                                  )}
+                                  placeholder="0.0"
+                                  value={assessmentGrades[student.id] || ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value
+                                    if (isValidGradeInput(value)) {
+                                      setAssessmentGrades({
+                                        ...assessmentGrades,
+                                        [student.id]: value
+                                      })
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    const formatted = formatGradeOnBlur(e.target.value)
+                                    setAssessmentGrades({
+                                      ...assessmentGrades,
+                                      [student.id]: formatted
+                                    })
+                                    setAssessmentGradesTouched({
+                                      ...assessmentGradesTouched,
+                                      [student.id]: true
+                                    })
+                                  }}
+                                />
+                                {hasError && (
+                                  <div className="text-xs text-red-500 whitespace-nowrap">
+                                    {grade! > maxGradeNum 
+                                      ? `Máx: ${maxGradeNum.toFixed(1)}`
+                                      : "Máx: 10.0"
+                                    }
+                                  </div>
                                 )}
-                                placeholder="0.0"
-                                value={assessmentGrades[student.id] || ""}
-                                onChange={(e) => setAssessmentGrades({
-                                  ...assessmentGrades,
-                                  [student.id]: e.target.value
-                                })}
-                              />
+                              </div>
                             </div>
                           </div>
                         )
                       })}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      * Digite a nota. Ex: 92 será convertido para 9.2 automaticamente
-                    </p>
                   </div>
 
                   <div className="flex justify-end gap-2">
@@ -1888,6 +2079,7 @@ export default function ClassDetailPage() {
                         setAssessmentType("")
                         setMaxGrade("")
                         setAssessmentGrades({})
+                        setAssessmentGradesTouched({})
                       }}
                     >
                       Voltar
@@ -1969,8 +2161,8 @@ export default function ClassDetailPage() {
                               </tr>
                             ) : (
                               // Agrupar por lesson_id + tipo para mostrar uma linha por avaliação
-                              Array.from(new Set(assessments.map(a => `${a.lesson_id}-${a.type}-${a.max_grade}`))).map(key => {
-                                const [lessonId, type] = key.split('-')
+                              Array.from(new Set(assessments.map(a => `${a.lesson_id}|${a.type}|${a.max_grade}`))).map(key => {
+                                const [lessonId, type, maxGrade] = key.split('|')
                                 const assessmentGroup = assessments.filter(a => 
                                   a.lesson_id === parseInt(lessonId) && a.type === type
                                 )
@@ -1981,7 +2173,7 @@ export default function ClassDetailPage() {
                                   <tr key={key} className="border-t hover:bg-muted/30">
                                     <td className="p-4">
                                       <span className="font-medium">{type}</span>
-                                      <span className="text-muted-foreground ml-2">({firstAssessment.max_grade})</span>
+                                      <span className="text-muted-foreground ml-2">({parseFloat(maxGrade).toFixed(1)})</span>
                                     </td>
                                     <td className="p-4">
                                       {lesson ? format(parseLocalDate(lesson.date), "dd/MM/yyyy", { locale: ptBR }) : '-'}
@@ -1999,6 +2191,11 @@ export default function ClassDetailPage() {
                                           size="icon"
                                           className="h-8 w-8"
                                           title="Editar"
+                                          onClick={() => handleEditAssessment(
+                                            parseInt(lessonId), 
+                                            type, 
+                                            parseFloat(maxGrade)
+                                          )}
                                         >
                                           <Pencil className="h-4 w-4" />
                                         </Button>
@@ -2007,6 +2204,10 @@ export default function ClassDetailPage() {
                                           size="icon"
                                           className="h-8 w-8 text-destructive hover:text-destructive"
                                           title="Excluir"
+                                          onClick={() => handleDeleteAssessment(
+                                            parseInt(lessonId), 
+                                            type
+                                          )}
                                         >
                                           <Trash2 className="h-4 w-4" />
                                         </Button>
@@ -2025,15 +2226,18 @@ export default function ClassDetailPage() {
                           <thead className="bg-muted/50">
                             <tr>
                               <th className="h-12 px-4 text-left align-middle font-medium sticky left-0 bg-muted/50 z-10 min-w-[200px]">Aluno</th>
-                              {Array.from(new Set(assessments.map(a => `${a.type}-${a.max_grade}`))).map(key => {
-                                const [type, maxGrade] = key.split('-')
+                              {Array.from(new Set(assessments.map(a => `${a.type}|${a.max_grade}`))).map(key => {
+                                const [type, maxGrade] = key.split('|')
                                 return (
                                   <th key={key} className="h-12 px-4 text-center align-middle font-medium min-w-[100px]">
                                     {type}
-                                    <div className="text-xs font-normal text-muted-foreground">({maxGrade})</div>
+                                    <div className="text-xs font-normal text-muted-foreground">({parseFloat(maxGrade).toFixed(1)})</div>
                                   </th>
                                 )
                               })}
+                              <th className="h-12 px-4 text-center align-middle font-medium min-w-[100px] bg-primary/5">
+                                Total
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
@@ -2044,29 +2248,37 @@ export default function ClassDetailPage() {
                                 </td>
                               </tr>
                             ) : (
-                              studentAssessmentMatrix.map((item) => (
-                                <tr key={item.student.id} className="border-t hover:bg-muted/30">
-                                  <td className="p-4 font-medium sticky left-0 bg-background z-10">
-                                    {item.student.name}
-                                  </td>
-                                  {Array.from(new Set(assessments.map(a => `${a.type}-${a.max_grade}`))).map(key => {
-                                    const [type, maxGrade] = key.split('-')
-                                    const studentAssessment = item.assessments.find(
-                                      (a: any) => a.type === type && a.max_grade === parseFloat(maxGrade)
-                                    )
-                                    
-                                    return (
-                                      <td key={key} className="p-4 text-center">
-                                        {studentAssessment ? (
-                                          <span className="font-medium">{studentAssessment.grade.toFixed(1)}</span>
-                                        ) : (
-                                          <span className="text-muted-foreground">-</span>
-                                        )}
-                                      </td>
-                                    )
-                                  })}
-                                </tr>
-                              ))
+                              studentAssessmentMatrix.map((item) => {
+                                // Calcular total das notas do aluno
+                                const totalGrade = item.assessments.reduce((sum: number, a: any) => sum + (a.grade || 0), 0)
+                                
+                                return (
+                                  <tr key={item.student.id} className="border-t hover:bg-muted/30">
+                                    <td className="p-4 font-medium sticky left-0 bg-background z-10">
+                                      {item.student.name}
+                                    </td>
+                                    {Array.from(new Set(assessments.map(a => `${a.type}|${a.max_grade}`))).map(key => {
+                                      const [type, maxGrade] = key.split('|')
+                                      const studentAssessment = item.assessments.find(
+                                        (a: any) => a.type === type && a.max_grade === parseFloat(maxGrade)
+                                      )
+                                      
+                                      return (
+                                        <td key={key} className="p-4 text-center">
+                                          {studentAssessment ? (
+                                            <span className="font-medium">{studentAssessment.grade.toFixed(1)}</span>
+                                          ) : (
+                                            <span className="text-muted-foreground">-</span>
+                                          )}
+                                        </td>
+                                      )
+                                    })}
+                                    <td className="p-4 text-center bg-primary/5">
+                                      <span className="font-bold text-primary">{totalGrade.toFixed(1)}</span>
+                                    </td>
+                                  </tr>
+                                )
+                              })
                             )}
                           </tbody>
                         </table>
@@ -2111,7 +2323,12 @@ export default function ClassDetailPage() {
                   : "Visualize o planejamento pedagógico desta turma"}
               </p>
               {canEdit && (
-                <Button>
+                <Button onClick={() => {
+                  toast({
+                    title: "Funcionalidade em desenvolvimento",
+                    description: "O sistema de planejamento com 8 unidades por livro estará disponível em breve"
+                  })
+                }}>
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Criar Planejamento
                 </Button>

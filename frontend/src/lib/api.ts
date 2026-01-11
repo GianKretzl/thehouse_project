@@ -390,5 +390,3 @@ export const urlsApi = {
     }>('/urls/usage');
   },
 };
-
-
