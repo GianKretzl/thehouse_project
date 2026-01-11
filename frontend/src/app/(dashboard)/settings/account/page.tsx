@@ -123,7 +123,6 @@ export default function AccountSettings() {
               <Badge variant={user.is_active ? "default" : "destructive"}>
                 {user.is_active ? "Ativo" : "Inativo"}
               </Badge>
-              </Badge>
             </div>
           )}
         </div>
