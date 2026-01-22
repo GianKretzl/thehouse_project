@@ -4,6 +4,7 @@
  */
 
 import { fetchApi } from './api';
+import { withCache } from './cache';
 
 // ============== TIPOS ==============
 
@@ -313,11 +314,17 @@ export const studentsApi = {
 
 export const classesApi = {
   async list(skip = 0, limit = 100): Promise<Class[]> {
-    return fetchApi<Class[]>(`/classes/?skip=${skip}&limit=${limit}`);
+    return withCache(`classes-list-${skip}-${limit}`, 
+      () => fetchApi<Class[]>(`/classes/?skip=${skip}&limit=${limit}`),
+      60000 // 1 minuto de cache
+    );
   },
 
   async getById(id: number): Promise<Class> {
-    return fetchApi<Class>(`/classes/${id}`);
+    return withCache(`class-${id}`,
+      () => fetchApi<Class>(`/classes/${id}`),
+      30000 // 30 segundos
+    );
   },
 
   async create(data: ClassCreate): Promise<Class> {
@@ -361,11 +368,17 @@ export const classesApi = {
 
 export const lessonsApi = {
   async list(classId: number, skip = 0, limit = 100): Promise<Lesson[]> {
-    return fetchApi<Lesson[]>(`/lessons/?class_id=${classId}&skip=${skip}&limit=${limit}`);
+    return withCache(`lessons-${classId}-${skip}-${limit}`,
+      () => fetchApi<Lesson[]>(`/lessons/?class_id=${classId}&skip=${skip}&limit=${limit}`),
+      45000 // 45 segundos de cache
+    );
   },
 
   async getById(id: number): Promise<Lesson> {
-    return fetchApi<Lesson>(`/lessons/${id}`);
+    return withCache(`lesson-${id}`,
+      () => fetchApi<Lesson>(`/lessons/${id}`),
+      30000
+    );
   },
 
   async create(data: LessonCreate): Promise<Lesson> {
@@ -396,7 +409,10 @@ export const lessonsApi = {
   },
 
   async getAttendances(lessonId: number): Promise<Attendance[]> {
-    return fetchApi<Attendance[]>(`/lessons/${lessonId}/attendances`);
+    return withCache(`attendances-${lessonId}`,
+      () => fetchApi<Attendance[]>(`/lessons/${lessonId}/attendances`),
+      30000
+    );
   },
 };
 
@@ -475,11 +491,18 @@ export const assessmentsApi = {
     params.append('skip', skip.toString());
     params.append('limit', limit.toString());
     
-    return fetchApi<Assessment[]>(`/assessments/?${params.toString()}`);
+    const cacheKey = `assessments-${classId || 'all'}-${studentId || 'all'}-${skip}-${limit}`;
+    return withCache(cacheKey,
+      () => fetchApi<Assessment[]>(`/assessments/?${params.toString()}`),
+      45000 // 45 segundos
+    );
   },
 
   async getById(id: number): Promise<Assessment> {
-    return fetchApi<Assessment>(`/assessments/${id}`);
+    return withCache(`assessment-${id}`,
+      () => fetchApi<Assessment>(`/assessments/${id}`),
+      30000
+    );
   },
 
   async create(data: AssessmentCreate): Promise<Assessment> {

@@ -45,12 +45,32 @@ const nextConfig: NextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, max-age=0',
+          },
         ],
       },
     ];
   },
   
-  // Redirects for better SEO
+  // Compressão automática
+  compress: true,
+  
+  // Otimizações de produção
+  poweredByHeader: false,
+  generateEtags: true,
+  
+  // Redirects para melhor SEO
   async redirects() {
     return [
       {
