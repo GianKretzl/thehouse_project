@@ -78,9 +78,6 @@ export default function UsersPage() {
                 <h2 className="text-2xl font-bold">{user.full_name || user.username}</h2>
                 <p className="text-muted-foreground">{user.email}</p>
                 <div className="mt-2 flex gap-2">
-                  <Badge variant={user.is_verified ? "default" : "secondary"}>
-                    {user.is_verified ? "✓ Verificado" : "Não Verificado"}
-                  </Badge>
                   <Badge variant={user.is_active ? "default" : "destructive"}>
                     {user.is_active ? "Ativo" : "Inativo"}
                   </Badge>
