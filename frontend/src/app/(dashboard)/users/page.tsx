@@ -95,60 +95,30 @@ export default function UsersPage() {
       </Card>
 
       {/* Stats Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Plano Atual */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Função */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Plano Atual</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Função</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold capitalize">
-              {subscription?.plan_name || user.plan_type}
+              {user.role}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {subscription?.is_active ? (
+              {user.is_active ? (
                 <>
                   <CheckCircle2 className="inline h-3 w-3 mr-1 text-green-500" />
-                  Ativo
+                  Conta Ativa
                 </>
               ) : (
                 <>
                   <AlertCircle className="inline h-3 w-3 mr-1 text-yellow-500" />
-                  Inativo
+                  Conta Inativa
                 </>
               )}
             </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-4 w-full"
-              onClick={() => router.push('/dashboard/pricing')}
-            >
-              Gerenciar Plano
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Uso Mensal */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Uso Mensal</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {usage?.used || 0} / {usage?.monthly_limit === 'unlimited' ? '∞' : usage?.monthly_limit || 0}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Verificações este mês
-            </p>
-            {usage && usage.monthly_limit !== 'unlimited' && (
-              <Progress 
-                value={usage.percentage_used} 
-                className="mt-4"
-              />
-            )}
           </CardContent>
         </Card>
 
