@@ -45,7 +45,7 @@ export default function UsersPage() {
   }
 
   const getInitials = (name: string | null) => {
-    if (!name) return user.username.substring(0, 2).toUpperCase()
+    if (!name) return user.username?.substring(0, 2).toUpperCase() || 'US'
     const names = name.split(' ')
     if (names.length >= 2) {
       return `${names[0][0]}${names[1][0]}`.toUpperCase()
