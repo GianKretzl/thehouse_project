@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZIPMiddleware
+from starlette.middleware.gzip import GZIPMiddleware
 from app.core.config import settings
 from app.api.routes import auth, admin, teachers, students, classes, lessons, assessments, enrollments, activities, calendar, lesson_planning
 
