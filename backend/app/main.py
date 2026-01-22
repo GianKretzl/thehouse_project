@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.gzip import GZIPMiddleware
 from app.core.config import settings
 from app.api.routes import auth, admin, teachers, students, classes, lessons, assessments, enrollments, activities, calendar, lesson_planning
 
@@ -9,9 +8,6 @@ app = FastAPI(
     version=settings.VERSION,
     openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
 )
-
-# Compression - reduz tamanho das respostas em até 70%
-app.add_middleware(GZIPMiddleware, minimum_size=1000)
 
 # CORS
 app.add_middleware(
