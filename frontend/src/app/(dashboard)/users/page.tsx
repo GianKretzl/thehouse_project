@@ -6,16 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { User, Shield, Calendar, Activity, CreditCard, CheckCircle2, AlertCircle } from "lucide-react"
+import { User, Shield, Calendar, CheckCircle2, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Progress } from "@/components/ui/progress"
 
 export default function UsersPage() {
   const { user, loading: authLoading } = useAuth()
-  const subLoading = false
-  const usageLoading = false
-  const subscription = null
-  const usage = null
   const router = useRouter()
 
   if (authLoading) {
@@ -148,28 +143,28 @@ export default function UsersPage() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Nome de Usuário</p>
-              <p className="text-sm mt-1">{user.username}</p>
-            </div>
-            <div>
               <p className="text-sm font-medium text-muted-foreground">Email</p>
               <p className="text-sm mt-1">{user.email}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Nome Completo</p>
-              <p className="text-sm mt-1">{user.full_name || 'Não informado'}</p>
+              <p className="text-sm font-medium text-muted-foreground">Nome</p>
+              <p className="text-sm mt-1">{user.name}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Tipo de Plano</p>
-              <p className="text-sm mt-1 capitalize">{user.plan_type}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Perfil</p>
+              <p className="text-sm font-medium text-muted-foreground">Função</p>
               <p className="text-sm mt-1">{user.role}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Status</p>
+              <p className="text-sm mt-1">{user.is_active ? 'Ativo' : 'Inativo'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">ID da Conta</p>
               <p className="text-sm mt-1 font-mono">#{user.id}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Cadastro</p>
+              <p className="text-sm mt-1">{formatDate(user.created_at)}</p>
             </div>
           </div>
         </CardContent>
@@ -188,10 +183,6 @@ export default function UsersPage() {
           <Button variant="outline" onClick={() => router.push('/dashboard/settings/notifications')}>
             <Shield className="mr-2 h-4 w-4" />
             Notificações
-          </Button>
-          <Button variant="outline" onClick={() => router.push('/dashboard/pricing')}>
-            <CreditCard className="mr-2 h-4 w-4" />
-            Gerenciar Assinatura
           </Button>
         </CardContent>
       </Card>
