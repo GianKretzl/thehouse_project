@@ -21,36 +21,39 @@ def reset_database():
     
     try:
         with engine.connect() as conn:
-            print("🗑️  Deletando todas as tabelas...")
+            print("🔍 Buscando todas as tabelas...")
             
-            # Drop todas as tabelas em ordem reversa (respeitando foreign keys)
-            tables = [
-                'material_reservations',
-                'events',
-                'announcements',
-                'assessments',
-                'attendances',
-                'lessons',
-                'enrollments',
-                'students',
-                'classes',
-                'users',
-                'alembic_version'
-            ]
+            # Busca todas as tabelas do schema public
+            result = conn.execute(text("""
+                SELECT tablename FROM pg_tables 
+                WHERE schemaname = 'public'
+            """))
+            tables = [row[0] for row in result]
+            
+            print(f"📋 Encontradas {len(tables)} tabelas: {', '.join(tables)}")
+            print("\n🗑️  Deletando todas as tabelas...")
             
             for table in tables:
                 try:
-                    conn.execute(text(f'DROP TABLE IF EXISTS {table} CASCADE'))
+                    conn.execute(text(f'DROP TABLE IF EXISTS "{table}" CASCADE'))
                     conn.commit()
                     print(f"  ✅ Deletado: {table}")
                 except Exception as e:
                     print(f"  ⚠️  {table}: {e}")
             
             print("\n🗑️  Deletando tipos ENUM...")
-            enums = ['userrole']
+            # Busca todos os tipos ENUM
+            result = conn.execute(text("""
+                SELECT t.typname 
+                FROM pg_type t 
+                JOIN pg_enum e ON t.oid = e.enumtypid 
+                GROUP BY t.typname
+            """))
+            enums = [row[0] for row in result]
+            
             for enum in enums:
                 try:
-                    conn.execute(text(f'DROP TYPE IF EXISTS {enum} CASCADE'))
+                    conn.execute(text(f'DROP TYPE IF EXISTS "{enum}" CASCADE'))
                     conn.commit()
                     print(f"  ✅ Deletado tipo: {enum}")
                 except Exception as e:
