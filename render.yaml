@@ -16,13 +16,14 @@ services:
     runtime: python
     plan: free
     region: ohio
-    repo: https://github.com/SEU_USUARIO/thehouse_project # ALTERE AQUI
+    repo: https://github.com/GianKretzl/thehouse_project
+    branch: main
+    autoDeploy: true
     rootDir: backend
     buildCommand: |
       pip install --upgrade pip
       pip install -r requirements.txt
       alembic upgrade head
-      python seed_test_data.py
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
@@ -45,7 +46,9 @@ services:
     runtime: node
     plan: free
     region: ohio
-    repo: https://github.com/SEU_USUARIO/thehouse_project # ALTERE AQUI
+    repo: https://github.com/GianKretzl/thehouse_project
+    branch: main
+    autoDeploy: true
     rootDir: frontend
     buildCommand: |
       npm install -g pnpm

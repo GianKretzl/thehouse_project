@@ -1,50 +1,113 @@
 # 🚀 Deploy no Render - The House Institute Platform
 
+## ✅ Deploy Automático Configurado!
+
+Este projeto está configurado para **deploy automático** a cada commit na branch `main`.
+
+### 🔄 Como Funciona
+
+**A cada `git push` para `main`:**
+1. GitHub envia webhook para o Render
+2. Render detecta mudanças em `backend/` ou `frontend/`
+3. Build automático dos serviços alterados
+4. Deploy sem interrupção (zero downtime)
+5. Rollback automático em caso de falha
+
+**Tempo de deploy:** ~8-10 minutos (backend + frontend)
+
+---
+
 ## 📋 Pré-requisitos
 
-1. **Conta no Render**: Criar conta gratuita em [https://render.com](https://render.com)
-2. **Repositório GitHub**: Push do código para um repositório público ou privado
-3. **Git instalado** e projeto versionado
+1. **Conta no Render**: [https://render.com](https://render.com)
+2. **Repositório GitHub**: Código em `https://github.com/GianKretzl/thehouse_project`
+3. **Arquivo `render.yaml`**: ✅ Já configurado
 
 ---
 
-## 🎯 Passo a Passo Completo
+## 🚀 Setup Inicial (Apenas Primeira Vez)
 
-### **ETAPA 1: Preparar o Repositório Git** 
-
-```bash
-# No diretório raiz do projeto (thehouse_project/)
-git init
-git add .
-git commit -m "Initial commit - The House Platform"
-
-# Criar repositório no GitHub e conectar
-git remote add origin https://github.com/SEU_USUARIO/thehouse_project.git
-git branch -M main
-git push -u origin main
-```
-
----
-
-### **ETAPA 2: Criar PostgreSQL Database**
+### **ETAPA 1: Conectar Repositório ao Render**
 
 1. **Login no Render** → [https://dashboard.render.com](https://dashboard.render.com)
 
-2. **New +** → **PostgreSQL**
+2. **New +** → **Blueprint** (Deploy via render.yaml)
 
-3. **Configurações**:
-   - **Name**: `thehouse-db`
-   - **Database**: `thehouse_institute`
-   - **User**: `thehouse_user` (auto-gerado)
-   - **Region**: `Ohio (US East)` (mais próximo do Brasil)
-   - **Plan**: `Free` (100MB, suficiente para teste)
+3. **Connect Repository**:
+   - Conecte sua conta GitHub
+   - Selecione `GianKretzl/thehouse_project`
+   - Branch: `main`
 
-4. **Create Database** ✅
+4. **Apply Blueprint** ✅
 
-5. **IMPORTANTE**: Copiar a **Internal Database URL** (parecida com):
-   ```
-   postgresql://thehouse_user:abc123...@dpg-xyz/thehouse_institute
-   ```
+O Render vai criar automaticamente:
+- ✅ PostgreSQL Database (`thehouse-db`)
+- ✅ Backend FastAPI (`thehouse-backend`)
+- ✅ Frontend Next.js (`thehouse-frontend`)
+
+---
+
+## 🎯 Deploy Automático - Workflow
+
+### **Desenvolvimento Local**
+
+```bash
+# 1. Crie uma branch para desenvolvimento
+git checkout -b feature/nova-funcionalidade
+
+# 2. Faça suas alterações
+# ... edite arquivos ...
+
+# 3. Commit local
+git add .
+git commit -m "feat: adiciona nova funcionalidade"
+
+# 4. Push para GitHub (não dispara deploy)
+git push origin feature/nova-funcionalidade
+```
+
+### **Quando Estiver Pronto para Produção**
+
+```bash
+# 5. Merge para main
+git checkout main
+git merge feature/nova-funcionalidade
+
+# 6. Push para main (DISPARA DEPLOY AUTOMÁTICO)
+git push origin main
+```
+
+**O que acontece automaticamente:**
+1. ⏳ GitHub notifica Render sobre o push
+2. 🔍 Render identifica arquivos alterados:
+   - `backend/*` → Rebuilda apenas backend
+   - `frontend/*` → Rebuilda apenas frontend
+   - Ambos → Rebuilda ambos serviços
+3. 🏗️ Build (3-5 min cada serviço)
+4. ✅ Deploy automático
+5. 🔄 Health checks
+6. 🎉 Serviços atualizados!
+
+---
+
+## 📊 Monitorar Deploys
+
+### **Dashboard do Render**
+```
+https://dashboard.render.com/
+```
+
+**Ver logs em tempo real:**
+- Backend: `https://dashboard.render.com/web/thehouse-backend`
+- Frontend: `https://dashboard.render.com/web/thehouse-frontend`
+- Database: `https://dashboard.render.com/d/thehouse-db`
+
+### **Notificações de Deploy**
+
+O GitHub Actions está configurado para mostrar status:
+```
+Actions → Deploy to Render → Ver último workflow
+```
 
 ---
 

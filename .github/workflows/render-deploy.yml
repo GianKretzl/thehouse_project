@@ -1,0 +1,28 @@
+# Deploy automático configurado via Render.com
+# 
+# Cada push para a branch main dispara:
+# 1. Build e deploy do backend (FastAPI)
+# 2. Build e deploy do frontend (Next.js)
+#
+# Status: https://dashboard.render.com
+
+name: Render Deploy Status
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy Info
+        run: |
+          echo "🚀 Deploy automático iniciado no Render"
+          echo "📦 Backend: FastAPI com PostgreSQL"
+          echo "🎨 Frontend: Next.js 15"
+          echo "🔗 Verifique o status: https://dashboard.render.com"
