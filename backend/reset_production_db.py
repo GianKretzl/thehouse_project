@@ -46,6 +46,16 @@ def reset_database():
                 except Exception as e:
                     print(f"  ⚠️  {table}: {e}")
             
+            print("\n🗑️  Deletando tipos ENUM...")
+            enums = ['userrole']
+            for enum in enums:
+                try:
+                    conn.execute(text(f'DROP TYPE IF EXISTS {enum} CASCADE'))
+                    conn.commit()
+                    print(f"  ✅ Deletado tipo: {enum}")
+                except Exception as e:
+                    print(f"  ⚠️  {enum}: {e}")
+            
             print("\n✅ Banco resetado com sucesso!")
             print("\n📝 Próximos passos:")
             print("1. Execute: alembic upgrade head")
