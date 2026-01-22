@@ -22,6 +22,14 @@ def create_test_data():
         print("🚀 Iniciando criação de dados de teste...")
         print("="*60)
         
+        # ==================== VERIFICAR SE JÁ EXISTEM DADOS ====================
+        existing_users = db.query(User).count()
+        if existing_users > 0:
+            print(f"\n⚠️  Banco já possui {existing_users} usuários")
+            print("🔄 Pulando criação de dados - banco já populado")
+            print("\n💡 Para resetar: delete todos os registros ou use reset_production_db.py")
+            return
+        
         # ==================== USUÁRIOS ====================
         print("\n👥 Criando usuários do sistema...")
         
