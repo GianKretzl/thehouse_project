@@ -71,7 +71,7 @@ export default function UsersPage() {
               <Avatar className="h-20 w-20">
                 <AvatarImage src="" />
                 <AvatarFallback className="text-2xl">
-                  {getInitials(user.full_name)}
+                  {getInitials(user.full_name ?? null)}
                 </AvatarFallback>
               </Avatar>
               <div>
