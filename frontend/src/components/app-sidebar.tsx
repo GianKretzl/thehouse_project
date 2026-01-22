@@ -172,8 +172,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
-                <div className="flex items-center justify-center w-full py-5">
-                  <Logo size={280} />
+                <div className="flex items-center justify-center w-full py-3">
+                  <Logo size={160} />
                 </div>
               </Link>
             </SidebarMenuButton>
